@@ -1,25 +1,114 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6211" systemVersion="14A298i" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7706" systemVersion="14F27" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="E12-HM-P3C">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6204"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7703"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
+        <!--Live Recorder-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" customModuleProvider="" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" customClass="ViewController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
                         <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
-                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="eBZ-4m-BR3">
+                                <rect key="frame" x="98" y="269" width="125" height="30"/>
+                                <state key="normal" title="Launch Recording">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <segue destination="8M0-Ld-XtU" kind="show" id="HCh-mw-CZC"/>
+                                </connections>
+                            </button>
+                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="eBZ-4m-BR3" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="IKs-v5-OPi"/>
+                            <constraint firstItem="eBZ-4m-BR3" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="TcB-S6-gwI"/>
+                        </constraints>
                     </view>
+                    <navigationItem key="navigationItem" title="Live Recorder" id="4c3-RL-2LA">
+                        <barButtonItem key="backBarButtonItem" title="Back" id="KdL-VD-rFg"/>
+                    </navigationItem>
+                    <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
+            <point key="canvasLocation" x="1065" y="307"/>
+        </scene>
+        <!--Recording-->
+        <scene sceneID="clx-AM-4dM">
+            <objects>
+                <viewController id="8M0-Ld-XtU" customClass="CaptureViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="8q5-X2-mkN"/>
+                        <viewControllerLayoutGuide type="bottom" id="Las-Gc-iFZ"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="redraw" id="0eI-jj-Wc0">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="99I-wU-jNB">
+                                <rect key="frame" x="108" y="83" width="105" height="30"/>
+                                <state key="normal" title="Switch Camera">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="changeCamera:" destination="8M0-Ld-XtU" eventType="touchUpInside" id="CxW-PC-J4N"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Rkz-62-5Ep">
+                                <rect key="frame" x="144" y="490" width="33" height="30"/>
+                                <state key="normal" title="Start">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="toggleRecording:" destination="8M0-Ld-XtU" eventType="touchUpInside" id="HKI-Lb-Ybk"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="99I-wU-jNB" firstAttribute="centerX" secondItem="0eI-jj-Wc0" secondAttribute="centerX" id="7JE-h0-tt0"/>
+                            <constraint firstItem="99I-wU-jNB" firstAttribute="top" secondItem="8q5-X2-mkN" secondAttribute="bottom" constant="19" id="Myi-0I-Ex3"/>
+                            <constraint firstItem="Rkz-62-5Ep" firstAttribute="centerX" secondItem="99I-wU-jNB" secondAttribute="centerX" id="oko-jy-dW2"/>
+                            <constraint firstItem="Las-Gc-iFZ" firstAttribute="top" secondItem="Rkz-62-5Ep" secondAttribute="bottom" constant="48" id="v8Z-8C-l2v"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" title="Recording" id="vPf-yT-Pz0"/>
+                    <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
+                    <connections>
+                        <outlet property="cameraButton" destination="99I-wU-jNB" id="tga-QX-Ivx"/>
+                        <outlet property="recordButton" destination="Rkz-62-5Ep" id="Gzb-An-45b"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ojA-NS-3XN" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1464" y="307"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="Fc8-q7-UML">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="E12-HM-P3C" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="cLL-T0-HCN">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="rootViewController" id="aso-aq-DsY"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="1ym-aB-hQf" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="672" y="307"/>
         </scene>
     </scenes>
 </document>
