@@ -17,7 +17,8 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="eBZ-4m-BR3">
-                                <rect key="frame" x="98" y="269" width="125" height="30"/>
+                                <rect key="frame" x="68.5" y="263.5" width="184" height="40"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="23"/>
                                 <state key="normal" title="Launch Recording">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
@@ -41,7 +42,7 @@
             </objects>
             <point key="canvasLocation" x="1065" y="307"/>
         </scene>
-        <!--Recording-->
+        <!--Capture View Controller-->
         <scene sceneID="clx-AM-4dM">
             <objects>
                 <viewController id="8M0-Ld-XtU" customClass="CaptureViewController" sceneMemberID="viewController">
@@ -49,12 +50,17 @@
                         <viewControllerLayoutGuide type="top" id="8q5-X2-mkN"/>
                         <viewControllerLayoutGuide type="bottom" id="Las-Gc-iFZ"/>
                     </layoutGuides>
-                    <view key="view" contentMode="redraw" id="0eI-jj-Wc0">
+                    <view key="view" contentMode="scaleToFill" id="0eI-jj-Wc0">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="x5x-Du-NsG" customClass="CaptureView">
+                                <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                            </view>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="99I-wU-jNB">
-                                <rect key="frame" x="108" y="83" width="105" height="30"/>
+                                <rect key="frame" x="93" y="440" width="135" height="36"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="20"/>
                                 <state key="normal" title="Switch Camera">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
@@ -63,10 +69,19 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Rkz-62-5Ep">
-                                <rect key="frame" x="144" y="490" width="33" height="30"/>
+                                <rect key="frame" x="139" y="494" width="43" height="36"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="44" id="WMx-QU-zgV"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="20"/>
                                 <state key="normal" title="Start">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
+                                <variation key="default">
+                                    <mask key="constraints">
+                                        <exclude reference="WMx-QU-zgV"/>
+                                    </mask>
+                                </variation>
                                 <connections>
                                     <action selector="toggleRecording:" destination="8M0-Ld-XtU" eventType="touchUpInside" id="HKI-Lb-Ybk"/>
                                 </connections>
@@ -74,22 +89,55 @@
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="99I-wU-jNB" firstAttribute="centerX" secondItem="0eI-jj-Wc0" secondAttribute="centerX" id="7JE-h0-tt0"/>
-                            <constraint firstItem="99I-wU-jNB" firstAttribute="top" secondItem="8q5-X2-mkN" secondAttribute="bottom" constant="19" id="Myi-0I-Ex3"/>
+                            <constraint firstItem="Las-Gc-iFZ" firstAttribute="top" secondItem="Rkz-62-5Ep" secondAttribute="bottom" constant="38" id="1KW-c9-akM"/>
+                            <constraint firstItem="99I-wU-jNB" firstAttribute="leading" secondItem="Rkz-62-5Ep" secondAttribute="leading" id="2ve-aZ-t70"/>
+                            <constraint firstItem="x5x-Du-NsG" firstAttribute="leading" secondItem="0eI-jj-Wc0" secondAttribute="leading" id="3UW-Sm-zV5"/>
+                            <constraint firstItem="99I-wU-jNB" firstAttribute="top" secondItem="8q5-X2-mkN" secondAttribute="bottom" constant="386" id="3cz-f0-orK"/>
+                            <constraint firstItem="99I-wU-jNB" firstAttribute="width" secondItem="Rkz-62-5Ep" secondAttribute="width" id="7Fh-BS-eFQ"/>
+                            <constraint firstItem="Rkz-62-5Ep" firstAttribute="top" secondItem="99I-wU-jNB" secondAttribute="bottom" constant="18" id="H83-8J-aUH"/>
+                            <constraint firstItem="99I-wU-jNB" firstAttribute="width" secondItem="Rkz-62-5Ep" secondAttribute="width" id="JKG-Kl-szP"/>
+                            <constraint firstItem="99I-wU-jNB" firstAttribute="top" secondItem="8q5-X2-mkN" secondAttribute="bottom" constant="48" id="Myi-0I-Ex3"/>
+                            <constraint firstItem="x5x-Du-NsG" firstAttribute="bottom" secondItem="Las-Gc-iFZ" secondAttribute="top" id="NdU-ct-Oli"/>
+                            <constraint firstAttribute="centerY" secondItem="x5x-Du-NsG" secondAttribute="centerY" id="Tly-7s-TLg"/>
+                            <constraint firstAttribute="centerX" secondItem="x5x-Du-NsG" secondAttribute="centerX" id="U4f-Ov-68A"/>
+                            <constraint firstItem="Rkz-62-5Ep" firstAttribute="top" secondItem="99I-wU-jNB" secondAttribute="bottom" constant="14" id="X70-7B-gYg"/>
+                            <constraint firstAttribute="centerX" secondItem="Rkz-62-5Ep" secondAttribute="centerX" id="XKD-hD-JuB"/>
+                            <constraint firstItem="Rkz-62-5Ep" firstAttribute="trailing" secondItem="99I-wU-jNB" secondAttribute="trailing" id="h1w-h8-qre"/>
+                            <constraint firstItem="Rkz-62-5Ep" firstAttribute="leading" secondItem="99I-wU-jNB" secondAttribute="leading" id="hSa-iA-Nkd"/>
+                            <constraint firstItem="99I-wU-jNB" firstAttribute="trailing" secondItem="Rkz-62-5Ep" secondAttribute="trailing" id="jIt-7M-Urq"/>
+                            <constraint firstItem="Las-Gc-iFZ" firstAttribute="top" secondItem="Rkz-62-5Ep" secondAttribute="bottom" constant="16" id="lkF-Hw-eiw"/>
                             <constraint firstItem="Rkz-62-5Ep" firstAttribute="centerX" secondItem="99I-wU-jNB" secondAttribute="centerX" id="oko-jy-dW2"/>
-                            <constraint firstItem="Las-Gc-iFZ" firstAttribute="top" secondItem="Rkz-62-5Ep" secondAttribute="bottom" constant="48" id="v8Z-8C-l2v"/>
+                            <constraint firstItem="99I-wU-jNB" firstAttribute="centerX" secondItem="0eI-jj-Wc0" secondAttribute="centerX" id="v5q-zK-hAx"/>
+                            <constraint firstAttribute="centerX" secondItem="99I-wU-jNB" secondAttribute="centerX" id="wRh-Yb-kfi"/>
                         </constraints>
+                        <variation key="default">
+                            <mask key="constraints">
+                                <exclude reference="2ve-aZ-t70"/>
+                                <exclude reference="3cz-f0-orK"/>
+                                <exclude reference="7Fh-BS-eFQ"/>
+                                <exclude reference="JKG-Kl-szP"/>
+                                <exclude reference="Myi-0I-Ex3"/>
+                                <exclude reference="jIt-7M-Urq"/>
+                                <exclude reference="v5q-zK-hAx"/>
+                                <exclude reference="X70-7B-gYg"/>
+                                <exclude reference="h1w-h8-qre"/>
+                                <exclude reference="hSa-iA-Nkd"/>
+                                <exclude reference="oko-jy-dW2"/>
+                                <exclude reference="lkF-Hw-eiw"/>
+                            </mask>
+                        </variation>
                     </view>
-                    <navigationItem key="navigationItem" title="Recording" id="vPf-yT-Pz0"/>
+                    <navigationItem key="navigationItem" id="vPf-yT-Pz0"/>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
                     <connections>
                         <outlet property="cameraButton" destination="99I-wU-jNB" id="tga-QX-Ivx"/>
+                        <outlet property="captureView" destination="x5x-Du-NsG" id="Xd1-82-vOA"/>
                         <outlet property="recordButton" destination="Rkz-62-5Ep" id="Gzb-An-45b"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ojA-NS-3XN" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1464" y="307"/>
+            <point key="canvasLocation" x="1468" y="307"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="Fc8-q7-UML">

@@ -8,6 +8,7 @@
 
 #import "CaptureViewController.h"
 #import <Photos/Photos.h>
+#import "CaptureView.h"
 
 typedef NS_ENUM(NSInteger, CaptureSetupResult) {
     CaptureSetupResultSuccess,
@@ -17,13 +18,14 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
 static void *SessionRunningContext = &SessionRunningContext;
 
 @interface CaptureViewController () <AVCaptureFileOutputRecordingDelegate>
+
+@property (strong, nonatomic) IBOutlet CaptureView *captureView;
 @property (strong, nonatomic) IBOutlet UIButton *cameraButton;
 @property (strong, nonatomic) IBOutlet UIButton *recordButton;
 
 @property (nonatomic) dispatch_queue_t sessionQueue;
 @property (nonatomic) AVCaptureSession *session;
 @property (nonatomic) AVCaptureDeviceInput *videoDeviceInput;
-@property (nonatomic) AVCaptureVideoPreviewLayer *videoPreviewLayer;
 @property (nonatomic) AVCaptureMovieFileOutput *movieFileOutput;
 
 @property (nonatomic) CaptureSetupResult setupResult;
@@ -44,10 +46,8 @@ static void *SessionRunningContext = &SessionRunningContext;
     // Create the AVCaptureSession.
     self.session = [[AVCaptureSession alloc] init];
     
-    // Create the preview layer.
-    AVCaptureVideoPreviewLayer *previewLayer = [AVCaptureVideoPreviewLayer layerWithSession:self.session];
-    previewLayer.frame = self.view.bounds;
-    [self.view.layer insertSublayer:previewLayer below:self.cameraButton.layer];
+    // Setup the capture view.
+    self.captureView.session = self.session;
     
     // Communicate with the session and other session objects on this queue.
     self.sessionQueue = dispatch_queue_create("session queue", DISPATCH_QUEUE_SERIAL);
@@ -107,6 +107,17 @@ static void *SessionRunningContext = &SessionRunningContext;
         if ([self.session canAddInput:videoDeviceInput]) {
             [self.session addInput:videoDeviceInput];
             self.videoDeviceInput = videoDeviceInput;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                // Use the status bar orientation as the initial video orientation. Subsequent orientation changes are handled by
+                // -[viewWillTransitionToSize:withTransitionCoordinator:].
+                UIInterfaceOrientation statusBarOrientation = [UIApplication sharedApplication].statusBarOrientation;
+                AVCaptureVideoOrientation initialVideoOrientation = AVCaptureVideoOrientationPortrait;
+                if (statusBarOrientation != UIInterfaceOrientationUnknown) {
+                    initialVideoOrientation = (AVCaptureVideoOrientation)statusBarOrientation;
+                }
+                AVCaptureVideoPreviewLayer *previewLayer = (AVCaptureVideoPreviewLayer *)self.captureView.layer;
+                previewLayer.connection.videoOrientation = initialVideoOrientation;
+            });
         } else {
             NSLog(@"Could not add video device input to the session");
             self.setupResult = CaptureSetupResultSessionConfigurationFailed;
@@ -147,9 +158,22 @@ static void *SessionRunningContext = &SessionRunningContext;
     // Dispose of any resources that can be recreated.
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    // Make the navigation bar transparent.
+    self.navigationController.navigationBar.shadowImage = [UIImage new];
+    [self.navigationController.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    // Undo "Make the navigation bar transparent".
+    [self.navigationController.navigationBar setBackgroundImage:nil forBarMetrics:UIBarMetricsDefault];
+    self.navigationController.navigationBar.shadowImage = nil;
+    [super viewWillDisappear:animated];
+}
+
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
-    
     dispatch_async(self.sessionQueue, ^{
         switch (self.setupResult) {
             case CaptureSetupResultSuccess:
@@ -166,12 +190,12 @@ static void *SessionRunningContext = &SessionRunningContext;
             case CaptureSetupResultCameraNotAuthorized:
             {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    NSString *message = NSLocalizedString( @"The app doesn't have permission to use the camera, please change privacy settings.", @"Alert message when the user has denied access to the camera" );
+                    NSString *message = NSLocalizedString(@"The app doesn't have permission to use the camera, please change privacy settings.", @"Alert message when the user has denied access to the camera");
                     UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Message" message:message preferredStyle:UIAlertControllerStyleAlert];
-                    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:NSLocalizedString( @"OK", @"Alert OK button" ) style:UIAlertActionStyleCancel handler:nil];
+                    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"OK", @"Alert OK button") style:UIAlertActionStyleCancel handler:nil];
                     [alertController addAction:cancelAction];
                     // Provide quick access to Settings.
-                    UIAlertAction *settingsAction = [UIAlertAction actionWithTitle:NSLocalizedString( @"Settings", @"Alert button to open Settings" ) style:UIAlertActionStyleDefault handler:^( UIAlertAction *action ) {
+                    UIAlertAction *settingsAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"Settings", @"Alert button to open Settings") style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
                         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
                     }];
                     [alertController addAction:settingsAction];
@@ -182,9 +206,9 @@ static void *SessionRunningContext = &SessionRunningContext;
             case CaptureSetupResultSessionConfigurationFailed:
             {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    NSString *message = NSLocalizedString( @"Unable to capture media.", @"Alert message when something goes wrong during capture session configuration" );
+                    NSString *message = NSLocalizedString(@"Unable to capture media.", @"Alert message when something goes wrong during capture session configuration");
                     UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Message" message:message preferredStyle:UIAlertControllerStyleAlert];
-                    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:NSLocalizedString( @"OK", @"Alert OK button" ) style:UIAlertActionStyleCancel handler:nil];
+                    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"OK", @"Alert OK button") style:UIAlertActionStyleCancel handler:nil];
                     [alertController addAction:cancelAction];
                     [self presentViewController:alertController animated:YES completion:nil];
                 });
@@ -213,6 +237,20 @@ static void *SessionRunningContext = &SessionRunningContext;
     return !self.movieFileOutput.isRecording;
 }
 
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+    
+    // Note that the app delegate controls the device orientation notifications required to use the device orientation.
+    UIDeviceOrientation deviceOrientation = [UIDevice currentDevice].orientation;
+    if (UIDeviceOrientationIsPortrait(deviceOrientation) || UIDeviceOrientationIsLandscape(deviceOrientation)) {
+        AVCaptureVideoPreviewLayer *previewLayer = (AVCaptureVideoPreviewLayer *)self.captureView.layer;
+        previewLayer.connection.videoOrientation = (AVCaptureVideoOrientation)deviceOrientation;
+    }
+}
+
+
+#pragma mark Actions
+
 - (IBAction)toggleRecording:(id)sender
 {
     // Disable the Camera button until recording finishes, and disable the Record button until recording starts or finishes. See the
@@ -235,7 +273,8 @@ static void *SessionRunningContext = &SessionRunningContext;
             
             // Update the orientation on the movie file output video connection before starting recording.
             AVCaptureConnection *connection = [self.movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
-            connection.videoOrientation = self.videoPreviewLayer.connection.videoOrientation;
+            AVCaptureVideoPreviewLayer *previewLayer = (AVCaptureVideoPreviewLayer *)self.captureView.layer;
+            connection.videoOrientation = previewLayer.connection.videoOrientation;
             
             // Start recording to a temporary file.
             NSString *outputFileName = [NSProcessInfo processInfo].globallyUniqueString;
@@ -301,7 +340,7 @@ static void *SessionRunningContext = &SessionRunningContext;
     // Enable the Record button to let the user stop the recording.
     dispatch_async(dispatch_get_main_queue(), ^{
         self.recordButton.enabled = YES;
-        [self.recordButton setTitle:NSLocalizedString( @"Stop", @"Recording button stop title") forState:UIControlStateNormal];
+        [self.recordButton setTitle:NSLocalizedString(@"Stop", @"Recording button stop title") forState:UIControlStateNormal];
     });
 }
 
@@ -316,7 +355,7 @@ static void *SessionRunningContext = &SessionRunningContext;
     
     dispatch_block_t cleanup = ^{
         [[NSFileManager defaultManager] removeItemAtURL:outputFileURL error:nil];
-        if ( currentBackgroundRecordingID != UIBackgroundTaskInvalid ) {
+        if (currentBackgroundRecordingID != UIBackgroundTaskInvalid) {
             [[UIApplication sharedApplication] endBackgroundTask:currentBackgroundRecordingID];
         }
     };
@@ -356,6 +395,8 @@ static void *SessionRunningContext = &SessionRunningContext;
         [self.recordButton setTitle:NSLocalizedString(@"Start", @"Recording button record title") forState:UIControlStateNormal];
     });
 }
+
+#pragma mark Device Configuration
 
 + (AVCaptureDevice *)deviceWithMediaType:(NSString *)mediaType preferringPosition:(AVCaptureDevicePosition)position {
     NSArray *devices = [AVCaptureDevice devicesWithMediaType:mediaType];

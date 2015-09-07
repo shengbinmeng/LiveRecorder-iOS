@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6C50AF811B9D2153000AF626 /* CaptureView.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C50AF801B9D2153000AF626 /* CaptureView.m */; };
 		6C7862E51B997F5F00E3F318 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C7862E41B997F5F00E3F318 /* main.m */; };
 		6C7862E81B997F5F00E3F318 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C7862E71B997F5F00E3F318 /* AppDelegate.m */; };
 		6C7862EB1B997F5F00E3F318 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C7862EA1B997F5F00E3F318 /* ViewController.m */; };
@@ -28,6 +29,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		6C50AF7F1B9D2153000AF626 /* CaptureView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CaptureView.h; sourceTree = "<group>"; };
+		6C50AF801B9D2153000AF626 /* CaptureView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CaptureView.m; sourceTree = "<group>"; };
 		6C7862DF1B997F5F00E3F318 /* LiveRecorder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LiveRecorder.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C7862E31B997F5F00E3F318 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6C7862E41B997F5F00E3F318 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -89,6 +92,8 @@
 				6C7862E91B997F5F00E3F318 /* ViewController.h */,
 				6C7862EA1B997F5F00E3F318 /* ViewController.m */,
 				6C7862EC1B997F5F00E3F318 /* Main.storyboard */,
+				6C50AF7F1B9D2153000AF626 /* CaptureView.h */,
+				6C50AF801B9D2153000AF626 /* CaptureView.m */,
 				6C7862EF1B997F5F00E3F318 /* Images.xcassets */,
 				6C7862F11B997F5F00E3F318 /* LaunchScreen.xib */,
 				6C7862E21B997F5F00E3F318 /* Supporting Files */,
@@ -226,6 +231,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6C7862EB1B997F5F00E3F318 /* ViewController.m in Sources */,
+				6C50AF811B9D2153000AF626 /* CaptureView.m in Sources */,
 				6C78630D1B99842E00E3F318 /* CaptureViewController.m in Sources */,
 				6C7862E81B997F5F00E3F318 /* AppDelegate.m in Sources */,
 				6C7862E51B997F5F00E3F318 /* main.m in Sources */,
@@ -429,6 +435,7 @@
 				6C7863041B997F5F00E3F318 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		6C7863051B997F5F00E3F318 /* Build configuration list for PBXNativeTarget "LiveRecorderTests" */ = {
 			isa = XCConfigurationList;
@@ -437,6 +444,7 @@
 				6C7863071B997F5F00E3F318 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
