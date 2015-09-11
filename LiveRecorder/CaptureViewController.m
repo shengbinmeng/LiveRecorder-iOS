@@ -17,7 +17,7 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
 };
 static void *SessionRunningContext = &SessionRunningContext;
 
-@interface CaptureViewController () <AVCaptureFileOutputRecordingDelegate>
+@interface CaptureViewController () <AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate>
 
 @property (strong, nonatomic) IBOutlet CaptureView *captureView;
 @property (strong, nonatomic) IBOutlet UIButton *cameraButton;
@@ -27,10 +27,13 @@ static void *SessionRunningContext = &SessionRunningContext;
 @property (nonatomic) AVCaptureSession *session;
 @property (nonatomic) AVCaptureDeviceInput *videoDeviceInput;
 @property (nonatomic) AVCaptureMovieFileOutput *movieFileOutput;
+@property (nonatomic) AVCaptureVideoDataOutput *videoDataOutput;
+@property (nonatomic) AVCaptureAudioDataOutput *audioDataOutput;
 
 @property (nonatomic) CaptureSetupResult setupResult;
-@property (nonatomic) BOOL sessionRunning;
 @property (nonatomic) UIBackgroundTaskIdentifier backgroundRecordingID;
+@property (nonatomic) BOOL isRecording;
+
 @end
 
 @implementation CaptureViewController
@@ -39,6 +42,8 @@ static void *SessionRunningContext = &SessionRunningContext;
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
+    self.isRecording = NO;
+
     // Disable UI. The UI is enabled if and only if the session starts running.
     self.cameraButton.enabled = NO;
     self.recordButton.enabled = NO;
@@ -95,21 +100,20 @@ static void *SessionRunningContext = &SessionRunningContext;
             return;
         }
         
+        [self.session beginConfiguration];
+        
+        // Add video input.
         NSError *error = nil;
         AVCaptureDevice *videoDevice = [CaptureViewController deviceWithMediaType:AVMediaTypeVideo preferringPosition:AVCaptureDevicePositionBack];;
         AVCaptureDeviceInput *videoDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
         if (!videoDeviceInput) {
             NSLog(@"Could not create video device input: %@", error);
         }
-        
-        [self.session beginConfiguration];
-        
         if ([self.session canAddInput:videoDeviceInput]) {
             [self.session addInput:videoDeviceInput];
             self.videoDeviceInput = videoDeviceInput;
             dispatch_async(dispatch_get_main_queue(), ^{
-                // Use the status bar orientation as the initial video orientation. Subsequent orientation changes are handled by
-                // -[viewWillTransitionToSize:withTransitionCoordinator:].
+                // Use the status bar orientation as the initial video orientation. Subsequent orientation changes are handled by [viewWillTransitionToSize:withTransitionCoordinator:].
                 UIInterfaceOrientation statusBarOrientation = [UIApplication sharedApplication].statusBarOrientation;
                 AVCaptureVideoOrientation initialVideoOrientation = AVCaptureVideoOrientationPortrait;
                 if (statusBarOrientation != UIInterfaceOrientationUnknown) {
@@ -123,18 +127,48 @@ static void *SessionRunningContext = &SessionRunningContext;
             self.setupResult = CaptureSetupResultSessionConfigurationFailed;
         }
         
+        // Add audio input.
         AVCaptureDevice *audioDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
         AVCaptureDeviceInput *audioDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:audioDevice error:&error];
         if (!audioDeviceInput) {
             NSLog(@"Could not create audio device input: %@", error);
         }
-        
         if ([self.session canAddInput:audioDeviceInput]) {
             [self.session addInput:audioDeviceInput];
         } else {
             NSLog(@"Could not add audio device input to the session");
         }
         
+        // Add video data output.
+        AVCaptureVideoDataOutput *videoDataOutput = [AVCaptureVideoDataOutput new];
+        [videoDataOutput setAlwaysDiscardsLateVideoFrames:YES];
+        NSDictionary *rgbOutputSettings = [NSDictionary dictionaryWithObject:
+                                           [NSNumber numberWithInt:kCMPixelFormat_32BGRA] forKey:(id)kCVPixelBufferPixelFormatTypeKey];
+        [videoDataOutput setVideoSettings:rgbOutputSettings];
+        dispatch_queue_t videoDataOutputQueue = dispatch_queue_create("VideoDataOutputQueue", DISPATCH_QUEUE_SERIAL);
+        [videoDataOutput setSampleBufferDelegate:self queue:videoDataOutputQueue];
+        
+        if ([self.session canAddOutput:videoDataOutput]) {
+            [self.session addOutput:videoDataOutput];
+            self.videoDataOutput = videoDataOutput;
+        } else {
+            NSLog(@"Could not add video data output to the session");
+            self.setupResult = CaptureSetupResultSessionConfigurationFailed;
+        }
+        
+        // Add audio data output.
+        AVCaptureAudioDataOutput *audioDataOutput = [AVCaptureAudioDataOutput new];
+        dispatch_queue_t audioDataOutputQueue = dispatch_queue_create("AudioDataOutputQueue", DISPATCH_QUEUE_SERIAL);
+        [audioDataOutput setSampleBufferDelegate:self queue:audioDataOutputQueue];
+        if ([self.session canAddOutput:audioDataOutput]) {
+            [self.session addOutput:audioDataOutput];
+            self.audioDataOutput = audioDataOutput;
+        } else {
+            NSLog(@"Could not add audio data output to the session");
+            self.setupResult = CaptureSetupResultSessionConfigurationFailed;
+        }
+        
+        // Add movie file output.
         AVCaptureMovieFileOutput *movieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
         if ([self.session canAddOutput:movieFileOutput]) {
             [self.session addOutput:movieFileOutput];
@@ -145,11 +179,15 @@ static void *SessionRunningContext = &SessionRunningContext;
             self.movieFileOutput = movieFileOutput;
         } else {
             NSLog(@"Could not add movie file output to the session");
-            self.setupResult = CaptureSetupResultSessionConfigurationFailed;
         }
         
+        // Do NOT use movie file output.
+        // If the movie file output is in the session, audio/video data output will not be used.
+        [self.session removeOutput:movieFileOutput];
+        self.movieFileOutput = nil;
+        
         [self.session commitConfiguration];
-    } );
+    });
 
 }
 
@@ -180,9 +218,8 @@ static void *SessionRunningContext = &SessionRunningContext;
             {
                 // Only setup observers and start the session running if setup succeeded.
                 [self.session startRunning];
-                self.sessionRunning = self.session.isRunning;
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    self.cameraButton.enabled = YES;
+                    self.cameraButton.enabled = ([AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo].count > 1);
                     self.recordButton.enabled = YES;
                 });
                 break;
@@ -206,7 +243,7 @@ static void *SessionRunningContext = &SessionRunningContext;
             case CaptureSetupResultSessionConfigurationFailed:
             {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    NSString *message = NSLocalizedString(@"Unable to capture media.", @"Alert message when something goes wrong during capture session configuration");
+                    NSString *message = NSLocalizedString(@"Unable to capture media becasue capture session setup failed.", @"Alert message when something goes wrong during capture session configuration");
                     UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Message" message:message preferredStyle:UIAlertControllerStyleAlert];
                     UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"OK", @"Alert OK button") style:UIAlertActionStyleCancel handler:nil];
                     [alertController addAction:cancelAction];
@@ -222,7 +259,7 @@ static void *SessionRunningContext = &SessionRunningContext;
 - (void)viewDidDisappear:(BOOL)animated {
     
     dispatch_async(self.sessionQueue, ^{
-        if (self.setupResult == CaptureSetupResultSuccess) {
+        if (self.session.isRunning) {
             [self.session stopRunning];
         }
     });
@@ -234,7 +271,7 @@ static void *SessionRunningContext = &SessionRunningContext;
 
 - (BOOL)shouldAutorotate {
     // Disable autorotation of the interface when recording is in progress.
-    return !self.movieFileOutput.isRecording;
+    return !self.isRecording;
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
@@ -251,17 +288,13 @@ static void *SessionRunningContext = &SessionRunningContext;
 
 #pragma mark Actions
 
-- (IBAction)toggleRecording:(id)sender
-{
-    // Disable the Camera button until recording finishes, and disable the Record button until recording starts or finishes. See the
-    // AVCaptureFileOutputRecordingDelegate methods.
-    self.cameraButton.enabled = NO;
-    self.recordButton.enabled = NO;
-    
-    dispatch_async(self.sessionQueue, ^{
-        if (self.movieFileOutput.isRecording) {
-            [self.movieFileOutput stopRecording];
-        } else {
+- (void)startRecording {
+    if (self.movieFileOutput != nil) {
+        // Disable the Camera button until recording finishes, and disable the Record button until recording starts or finishes. See the
+        // AVCaptureFileOutputRecordingDelegate methods.
+        self.cameraButton.enabled = NO;
+        self.recordButton.enabled = NO;
+        dispatch_async(self.sessionQueue, ^{
             if ([[UIDevice currentDevice] isMultitaskingSupported]) {
                 // Setup background task. This is needed because the -[captureOutput:didFinishRecordingToOutputFileAtURL:fromConnections:error:]
                 // callback is not received until AVCam returns to the foreground unless you request background execution time.
@@ -280,12 +313,42 @@ static void *SessionRunningContext = &SessionRunningContext;
             NSString *outputFileName = [NSProcessInfo processInfo].globallyUniqueString;
             NSString *outputFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:[outputFileName stringByAppendingPathExtension:@"mov"]];
             [self.movieFileOutput startRecordingToOutputFileURL:[NSURL fileURLWithPath:outputFilePath] recordingDelegate:self];
-        }
-    });
+        });
+    } else {
+        // Start our recording.
+        self.cameraButton.enabled = NO;
+        [self.recordButton setTitle:NSLocalizedString(@"Stop", @"Recording button stop title") forState:UIControlStateNormal];
+        self.isRecording = YES;
+    }
+
+}
+
+- (void)stopRecording {
+    if (self.movieFileOutput != nil) {
+        dispatch_async(self.sessionQueue, ^{
+            [self.movieFileOutput stopRecording];
+        });
+    } else {
+        // Stop our recording.
+        self.cameraButton.enabled = ([AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo].count > 1);
+        [self.recordButton setTitle:NSLocalizedString(@"Start", @"Recording button record title") forState:UIControlStateNormal];
+        self.isRecording = NO;
+    }
+    
+}
+
+- (IBAction)toggleRecording:(id)sender
+{
+    if (self.isRecording) {
+        [self stopRecording];
+    } else {
+        [self startRecording];
+    }
 }
 
 - (IBAction)changeCamera:(id)sender
 {
+    // Disable the buttons. They will be enabled when change is finished.
     self.cameraButton.enabled = NO;
     self.recordButton.enabled = NO;
     
@@ -342,6 +405,7 @@ static void *SessionRunningContext = &SessionRunningContext;
         self.recordButton.enabled = YES;
         [self.recordButton setTitle:NSLocalizedString(@"Stop", @"Recording button stop title") forState:UIControlStateNormal];
     });
+    self.isRecording = YES;
 }
 
 - (void)captureOutput:(AVCaptureFileOutput *)captureOutput didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray *)connections error:(NSError *)error
@@ -394,6 +458,30 @@ static void *SessionRunningContext = &SessionRunningContext;
         self.recordButton.enabled = YES;
         [self.recordButton setTitle:NSLocalizedString(@"Start", @"Recording button record title") forState:UIControlStateNormal];
     });
+}
+
+#pragma mark Data Output Delegate
+
+- (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
+    if (captureOutput == self.videoDataOutput) {
+        CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+        CFDictionaryRef attachments = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sampleBuffer, kCMAttachmentMode_ShouldPropagate);
+        CIImage *ciImage = [[CIImage alloc] initWithCVPixelBuffer:pixelBuffer options:(__bridge NSDictionary *)attachments];
+        NSLog(@"Video data output, %@", ciImage.description);
+        if (attachments) {
+            CFRelease(attachments);
+        }
+    } else if (captureOutput == self.audioDataOutput) {
+        // Get the sample buffer's AudioStreamBasicDescription.
+        CMFormatDescriptionRef formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer);
+        const AudioStreamBasicDescription *audioFormat = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription);
+        NSLog(@"Audio data output, sample rate: %f", audioFormat->mSampleRate);
+        if (audioFormat->mFormatID != kAudioFormatLinearPCM) {
+            NSLog(@"Bad format");
+            return;
+        }
+    }
+
 }
 
 #pragma mark Device Configuration
