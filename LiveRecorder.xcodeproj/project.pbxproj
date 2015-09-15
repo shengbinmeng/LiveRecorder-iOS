@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6C04CDF71BA6648B00547392 /* CoreRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C04CDF61BA6648B00547392 /* CoreRecorder.m */; };
+		6C04CDFA1BA664B600547392 /* VideoEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C04CDF91BA664B600547392 /* VideoEncoder.m */; };
+		6C04CDFD1BA7BB4200547392 /* StreamOutput.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C04CDFC1BA7BB4200547392 /* StreamOutput.m */; };
+		6C04CE001BA7C02100547392 /* AudioEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C04CDFF1BA7C02100547392 /* AudioEncoder.m */; };
 		6C50AF811B9D2153000AF626 /* CaptureView.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C50AF801B9D2153000AF626 /* CaptureView.m */; };
 		6C7862E51B997F5F00E3F318 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C7862E41B997F5F00E3F318 /* main.m */; };
 		6C7862E81B997F5F00E3F318 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C7862E71B997F5F00E3F318 /* AppDelegate.m */; };
@@ -29,6 +33,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		6C04CDF51BA6648B00547392 /* CoreRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CoreRecorder.h; sourceTree = "<group>"; };
+		6C04CDF61BA6648B00547392 /* CoreRecorder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CoreRecorder.m; sourceTree = "<group>"; };
+		6C04CDF81BA664B600547392 /* VideoEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoEncoder.h; sourceTree = "<group>"; };
+		6C04CDF91BA664B600547392 /* VideoEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoEncoder.m; sourceTree = "<group>"; };
+		6C04CDFB1BA7BB4200547392 /* StreamOutput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamOutput.h; sourceTree = "<group>"; };
+		6C04CDFC1BA7BB4200547392 /* StreamOutput.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamOutput.m; sourceTree = "<group>"; };
+		6C04CDFE1BA7C02100547392 /* AudioEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioEncoder.h; sourceTree = "<group>"; };
+		6C04CDFF1BA7C02100547392 /* AudioEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioEncoder.m; sourceTree = "<group>"; };
 		6C50AF7F1B9D2153000AF626 /* CaptureView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CaptureView.h; sourceTree = "<group>"; };
 		6C50AF801B9D2153000AF626 /* CaptureView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CaptureView.m; sourceTree = "<group>"; };
 		6C7862DF1B997F5F00E3F318 /* LiveRecorder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LiveRecorder.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -66,9 +78,26 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6C04CE011BA7C05700547392 /* CoreRecorder */ = {
+			isa = PBXGroup;
+			children = (
+				6C04CDFE1BA7C02100547392 /* AudioEncoder.h */,
+				6C04CDFF1BA7C02100547392 /* AudioEncoder.m */,
+				6C04CDF51BA6648B00547392 /* CoreRecorder.h */,
+				6C04CDF61BA6648B00547392 /* CoreRecorder.m */,
+				6C04CDFB1BA7BB4200547392 /* StreamOutput.h */,
+				6C04CDFC1BA7BB4200547392 /* StreamOutput.m */,
+				6C04CDF81BA664B600547392 /* VideoEncoder.h */,
+				6C04CDF91BA664B600547392 /* VideoEncoder.m */,
+			);
+			name = CoreRecorder;
+			path = LiveRecorder;
+			sourceTree = "<group>";
+		};
 		6C7862D61B997F5F00E3F318 = {
 			isa = PBXGroup;
 			children = (
+				6C04CE011BA7C05700547392 /* CoreRecorder */,
 				6C7862E11B997F5F00E3F318 /* LiveRecorder */,
 				6C7862FB1B997F5F00E3F318 /* LiveRecorderTests */,
 				6C7862E01B997F5F00E3F318 /* Products */,
@@ -234,6 +263,10 @@
 				6C50AF811B9D2153000AF626 /* CaptureView.m in Sources */,
 				6C78630D1B99842E00E3F318 /* CaptureViewController.m in Sources */,
 				6C7862E81B997F5F00E3F318 /* AppDelegate.m in Sources */,
+				6C04CDF71BA6648B00547392 /* CoreRecorder.m in Sources */,
+				6C04CDFA1BA664B600547392 /* VideoEncoder.m in Sources */,
+				6C04CE001BA7C02100547392 /* AudioEncoder.m in Sources */,
+				6C04CDFD1BA7BB4200547392 /* StreamOutput.m in Sources */,
 				6C7862E51B997F5F00E3F318 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -9,6 +9,9 @@
 #import "CaptureViewController.h"
 #import <Photos/Photos.h>
 #import "CaptureView.h"
+#import "CoreRecorder.h"
+
+#define OUTPUT_TO_MOVIE_FILE 0
 
 typedef NS_ENUM(NSInteger, CaptureSetupResult) {
     CaptureSetupResultSuccess,
@@ -34,6 +37,8 @@ static void *SessionRunningContext = &SessionRunningContext;
 @property (nonatomic) UIBackgroundTaskIdentifier backgroundRecordingID;
 @property (nonatomic) BOOL isRecording;
 
+@property (nonatomic) CoreRecorder *recorder;
+
 @end
 
 @implementation CaptureViewController
@@ -41,6 +46,15 @@ static void *SessionRunningContext = &SessionRunningContext;
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
+    
+    int sampleRate = 44100;
+    int channelCount = 2;
+    int audioBitrate = 20000;
+    int width = 640;
+    int height = 480;
+    int frameRate = 30;
+    int videoBitrate = 200000;
+    NSString *outputAddress = @"/";
     
     self.isRecording = NO;
 
@@ -168,6 +182,7 @@ static void *SessionRunningContext = &SessionRunningContext;
             self.setupResult = CaptureSetupResultSessionConfigurationFailed;
         }
         
+#if OUTPUT_TO_MOVIE_FILE
         // Add movie file output.
         AVCaptureMovieFileOutput *movieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
         if ([self.session canAddOutput:movieFileOutput]) {
@@ -180,14 +195,13 @@ static void *SessionRunningContext = &SessionRunningContext;
         } else {
             NSLog(@"Could not add movie file output to the session");
         }
-        
-        // Do NOT use movie file output.
-        // If the movie file output is in the session, audio/video data output will not be used.
-        [self.session removeOutput:movieFileOutput];
-        self.movieFileOutput = nil;
+#endif
         
         [self.session commitConfiguration];
     });
+    
+    self.recorder = [[CoreRecorder alloc] init];
+    [self.recorder setSampleRate:sampleRate channelCount:channelCount audioBitrate:audioBitrate width:width height:height frameRate:frameRate videoBitrate:videoBitrate outputAddress:outputAddress];
 
 }
 
@@ -262,6 +276,9 @@ static void *SessionRunningContext = &SessionRunningContext;
         if (self.session.isRunning) {
             [self.session stopRunning];
         }
+        if (self.isRecording) {
+            [self stopRecording];
+        }
     });
     
     [super viewDidDisappear:animated];
@@ -316,6 +333,7 @@ static void *SessionRunningContext = &SessionRunningContext;
         });
     } else {
         // Start our recording.
+        [self.recorder start];
         self.cameraButton.enabled = NO;
         [self.recordButton setTitle:NSLocalizedString(@"Stop", @"Recording button stop title") forState:UIControlStateNormal];
         self.isRecording = YES;
@@ -330,15 +348,15 @@ static void *SessionRunningContext = &SessionRunningContext;
         });
     } else {
         // Stop our recording.
+        self.isRecording = NO;
         self.cameraButton.enabled = ([AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo].count > 1);
         [self.recordButton setTitle:NSLocalizedString(@"Start", @"Recording button record title") forState:UIControlStateNormal];
-        self.isRecording = NO;
+        [self.recorder stop];
     }
     
 }
 
-- (IBAction)toggleRecording:(id)sender
-{
+- (IBAction)toggleRecording:(id)sender {
     if (self.isRecording) {
         [self stopRecording];
     } else {
@@ -346,8 +364,7 @@ static void *SessionRunningContext = &SessionRunningContext;
     }
 }
 
-- (IBAction)changeCamera:(id)sender
-{
+- (IBAction)changeCamera:(id)sender {
     // Disable the buttons. They will be enabled when change is finished.
     self.cameraButton.enabled = NO;
     self.recordButton.enabled = NO;
@@ -408,8 +425,7 @@ static void *SessionRunningContext = &SessionRunningContext;
     self.isRecording = YES;
 }
 
-- (void)captureOutput:(AVCaptureFileOutput *)captureOutput didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray *)connections error:(NSError *)error
-{
+- (void)captureOutput:(AVCaptureFileOutput *)captureOutput didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray *)connections error:(NSError *)error {
     // Note that currentBackgroundRecordingID is used to end the background task associated with this recording.
     // This allows a new recording to be started, associated with a new UIBackgroundTaskIdentifier, once the movie file output's isRecording property
     // is back to NO — which happens sometime after this method returns.
@@ -463,23 +479,13 @@ static void *SessionRunningContext = &SessionRunningContext;
 #pragma mark Data Output Delegate
 
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
+    if (self.movieFileOutput != nil || self.isRecording == NO) {
+        return;
+    }
     if (captureOutput == self.videoDataOutput) {
-        CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-        CFDictionaryRef attachments = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sampleBuffer, kCMAttachmentMode_ShouldPropagate);
-        CIImage *ciImage = [[CIImage alloc] initWithCVPixelBuffer:pixelBuffer options:(__bridge NSDictionary *)attachments];
-        NSLog(@"Video data output, %@", ciImage.description);
-        if (attachments) {
-            CFRelease(attachments);
-        }
+        [self.recorder didReceiveVideoSamples:sampleBuffer];
     } else if (captureOutput == self.audioDataOutput) {
-        // Get the sample buffer's AudioStreamBasicDescription.
-        CMFormatDescriptionRef formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer);
-        const AudioStreamBasicDescription *audioFormat = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription);
-        NSLog(@"Audio data output, sample rate: %f", audioFormat->mSampleRate);
-        if (audioFormat->mFormatID != kAudioFormatLinearPCM) {
-            NSLog(@"Bad format");
-            return;
-        }
+        [self.recorder didReceiveAudioSamples:sampleBuffer];
     }
 
 }
