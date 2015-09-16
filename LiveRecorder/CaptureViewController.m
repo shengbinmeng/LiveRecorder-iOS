@@ -11,16 +11,13 @@
 #import "CaptureView.h"
 #import "CoreRecorder.h"
 
-#define OUTPUT_TO_MOVIE_FILE 0
-
 typedef NS_ENUM(NSInteger, CaptureSetupResult) {
     CaptureSetupResultSuccess,
     CaptureSetupResultCameraNotAuthorized,
     CaptureSetupResultSessionConfigurationFailed
 };
-static void *SessionRunningContext = &SessionRunningContext;
 
-@interface CaptureViewController () <AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate>
+@interface CaptureViewController () <AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate>
 
 @property (strong, nonatomic) IBOutlet CaptureView *captureView;
 @property (strong, nonatomic) IBOutlet UIButton *cameraButton;
@@ -29,7 +26,7 @@ static void *SessionRunningContext = &SessionRunningContext;
 @property (nonatomic) dispatch_queue_t sessionQueue;
 @property (nonatomic) AVCaptureSession *session;
 @property (nonatomic) AVCaptureDeviceInput *videoDeviceInput;
-@property (nonatomic) AVCaptureMovieFileOutput *movieFileOutput;
+
 @property (nonatomic) AVCaptureVideoDataOutput *videoDataOutput;
 @property (nonatomic) AVCaptureAudioDataOutput *audioDataOutput;
 
@@ -114,6 +111,9 @@ static void *SessionRunningContext = &SessionRunningContext;
         [self.session beginConfiguration];
         
         [self.session setSessionPreset:[NSString stringWithString:AVCaptureSessionPreset640x480]];
+        // Set the values according to actual configuration.
+        width = 640;
+        height = 480;
         
         // Add video input.
         NSError *error = nil;
@@ -180,21 +180,6 @@ static void *SessionRunningContext = &SessionRunningContext;
             NSLog(@"Could not add audio data output to the session");
             self.setupResult = CaptureSetupResultSessionConfigurationFailed;
         }
-        
-#if OUTPUT_TO_MOVIE_FILE
-        // Add movie file output.
-        AVCaptureMovieFileOutput *movieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
-        if ([self.session canAddOutput:movieFileOutput]) {
-            [self.session addOutput:movieFileOutput];
-            AVCaptureConnection *connection = [movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
-            if (connection.isVideoStabilizationSupported) {
-                connection.preferredVideoStabilizationMode = AVCaptureVideoStabilizationModeAuto;
-            }
-            self.movieFileOutput = movieFileOutput;
-        } else {
-            NSLog(@"Could not add movie file output to the session");
-        }
-#endif
         
         [self.session commitConfiguration];
         
@@ -292,7 +277,7 @@ static void *SessionRunningContext = &SessionRunningContext;
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
     
-    // Note that the app delegate controls the device orientation notifications required to use the device orientation.
+    // The device orientation is different from UI orientation.
     UIDeviceOrientation deviceOrientation = [UIDevice currentDevice].orientation;
     if (UIDeviceOrientationIsPortrait(deviceOrientation) || UIDeviceOrientationIsLandscape(deviceOrientation)) {
         AVCaptureVideoPreviewLayer *previewLayer = (AVCaptureVideoPreviewLayer *)self.captureView.layer;
@@ -304,65 +289,30 @@ static void *SessionRunningContext = &SessionRunningContext;
 #pragma mark Actions
 
 - (void)startRecording {
-    if (self.movieFileOutput != nil) {
-        // Disable the Camera button until recording finishes, and disable the Record button until recording starts or finishes. See the
-        // AVCaptureFileOutputRecordingDelegate methods.
-        self.cameraButton.enabled = NO;
-        self.recordButton.enabled = NO;
-        dispatch_async(self.sessionQueue, ^{
-            if ([[UIDevice currentDevice] isMultitaskingSupported]) {
-                // Setup background task. This is needed because the -[captureOutput:didFinishRecordingToOutputFileAtURL:fromConnections:error:]
-                // callback is not received until AVCam returns to the foreground unless you request background execution time.
-                // This also ensures that there will be time to write the file to the photo library when AVCam is backgrounded.
-                // To conclude this background execution, -endBackgroundTask is called in
-                // -[captureOutput:didFinishRecordingToOutputFileAtURL:fromConnections:error:] after the recorded file has been saved.
-                self.backgroundRecordingID = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:nil];
-            }
-            
-            // Update the orientation on the movie file output video connection before starting recording.
-            AVCaptureConnection *connection = [self.movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
-            AVCaptureVideoPreviewLayer *previewLayer = (AVCaptureVideoPreviewLayer *)self.captureView.layer;
-            connection.videoOrientation = previewLayer.connection.videoOrientation;
-            
-            // Start recording to a temporary file.
-            NSString *outputFileName = [NSProcessInfo processInfo].globallyUniqueString;
-            NSString *outputFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent:[outputFileName stringByAppendingPathExtension:@"mov"]];
-            [self.movieFileOutput startRecordingToOutputFileURL:[NSURL fileURLWithPath:outputFilePath] recordingDelegate:self];
-        });
-    } else {
-        // Update the orientation on the output video connection before starting recording.
-        AVCaptureConnection *connection = [self.videoDataOutput connectionWithMediaType:AVMediaTypeVideo];
-        AVCaptureVideoPreviewLayer *previewLayer = (AVCaptureVideoPreviewLayer *)self.captureView.layer;
-        connection.videoOrientation = previewLayer.connection.videoOrientation;
-        if (connection.videoOrientation == AVCaptureVideoOrientationPortrait || connection.videoOrientation == AVCaptureVideoOrientationPortraitUpsideDown) {
-            int height = self.recorder.height;
-            int width = self.recorder.width;
-            [self.recorder setWidth:height];
-            [self.recorder setHeight:width];
-        }
-        
-        // Start our recording.
-        [self.recorder start];
-        self.cameraButton.enabled = NO;
-        [self.recordButton setTitle:NSLocalizedString(@"Stop", @"Recording button stop title") forState:UIControlStateNormal];
-        self.isRecording = YES;
+    // Update the orientation on the output video connection before starting recording.
+    AVCaptureConnection *connection = [self.videoDataOutput connectionWithMediaType:AVMediaTypeVideo];
+    AVCaptureVideoPreviewLayer *previewLayer = (AVCaptureVideoPreviewLayer *)self.captureView.layer;
+    connection.videoOrientation = previewLayer.connection.videoOrientation;
+    if (connection.videoOrientation == AVCaptureVideoOrientationPortrait || connection.videoOrientation == AVCaptureVideoOrientationPortraitUpsideDown) {
+        int height = self.recorder.height;
+        int width = self.recorder.width;
+        [self.recorder setWidth:height];
+        [self.recorder setHeight:width];
     }
-
+    
+    // Start our recording.
+    [self.recorder start];
+    self.cameraButton.enabled = NO;
+    [self.recordButton setTitle:NSLocalizedString(@"Stop", @"Recording button stop title") forState:UIControlStateNormal];
+    self.isRecording = YES;
 }
 
 - (void)stopRecording {
-    if (self.movieFileOutput != nil) {
-        dispatch_async(self.sessionQueue, ^{
-            [self.movieFileOutput stopRecording];
-        });
-    } else {
-        // Stop our recording.
-        self.isRecording = NO;
-        self.cameraButton.enabled = ([AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo].count > 1);
-        [self.recordButton setTitle:NSLocalizedString(@"Start", @"Recording button record title") forState:UIControlStateNormal];
-        [self.recorder stop];
-    }
-    
+    // Stop our recording.
+    self.isRecording = NO;
+    self.cameraButton.enabled = ([AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo].count > 1);
+    [self.recordButton setTitle:NSLocalizedString(@"Start", @"Recording button record title") forState:UIControlStateNormal];
+    [self.recorder stop];
 }
 
 - (IBAction)toggleRecording:(id)sender {
@@ -409,7 +359,7 @@ static void *SessionRunningContext = &SessionRunningContext;
             [self.session addInput:self.videoDeviceInput];
         }
         
-        AVCaptureConnection *connection = [self.movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
+        AVCaptureConnection *connection = [self.videoDataOutput connectionWithMediaType:AVMediaTypeVideo];
         if (connection.isVideoStabilizationSupported) {
             connection.preferredVideoStabilizationMode = AVCaptureVideoStabilizationModeAuto;
         }
@@ -423,72 +373,10 @@ static void *SessionRunningContext = &SessionRunningContext;
     });
 }
 
-#pragma mark File Output Recording Delegate
-
-- (void)captureOutput:(AVCaptureFileOutput *)captureOutput didStartRecordingToOutputFileAtURL:(NSURL *)fileURL fromConnections:(NSArray *)connections {
-    // Enable the Record button to let the user stop the recording.
-    dispatch_async(dispatch_get_main_queue(), ^{
-        self.recordButton.enabled = YES;
-        [self.recordButton setTitle:NSLocalizedString(@"Stop", @"Recording button stop title") forState:UIControlStateNormal];
-    });
-    self.isRecording = YES;
-}
-
-- (void)captureOutput:(AVCaptureFileOutput *)captureOutput didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray *)connections error:(NSError *)error {
-    // Note that currentBackgroundRecordingID is used to end the background task associated with this recording.
-    // This allows a new recording to be started, associated with a new UIBackgroundTaskIdentifier, once the movie file output's isRecording property
-    // is back to NO — which happens sometime after this method returns.
-    // Note: Since we use a unique file path for each recording, a new recording will not overwrite a recording currently being saved.
-    UIBackgroundTaskIdentifier currentBackgroundRecordingID = self.backgroundRecordingID;
-    self.backgroundRecordingID = UIBackgroundTaskInvalid;
-    
-    dispatch_block_t cleanup = ^{
-        [[NSFileManager defaultManager] removeItemAtURL:outputFileURL error:nil];
-        if (currentBackgroundRecordingID != UIBackgroundTaskInvalid) {
-            [[UIApplication sharedApplication] endBackgroundTask:currentBackgroundRecordingID];
-        }
-    };
-    
-    BOOL success = YES;
-    
-    if (error) {
-        NSLog(@"Movie file finishing error: %@", error);
-        success = [error.userInfo[AVErrorRecordingSuccessfullyFinishedKey] boolValue];
-    }
-    if (success) {
-        // Check authorization status.
-        [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {
-            if (status == PHAuthorizationStatusAuthorized) {
-                // Save the movie file to the photo library and cleanup.
-                [[PHPhotoLibrary sharedPhotoLibrary] performChanges:^{
-                    [PHAssetChangeRequest creationRequestForAssetFromVideoAtFileURL:outputFileURL];
-                } completionHandler:^(BOOL success, NSError *error) {
-                    if (!success) {
-                        NSLog(@"Could not save movie to photo library: %@", error);
-                    }
-                    cleanup();
-                }];
-            } else {
-                cleanup();
-            }
-        }];
-    } else {
-        cleanup();
-    }
-    
-    // Enable the Camera and Record buttons to let the user switch camera and start another recording.
-    dispatch_async(dispatch_get_main_queue(), ^{
-        // Only enable the ability to change camera if the device has more than one camera.
-        self.cameraButton.enabled = ([AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo].count > 1);
-        self.recordButton.enabled = YES;
-        [self.recordButton setTitle:NSLocalizedString(@"Start", @"Recording button record title") forState:UIControlStateNormal];
-    });
-}
-
 #pragma mark Data Output Delegate
 
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
-    if (self.movieFileOutput != nil || self.isRecording == NO) {
+    if (self.isRecording == NO) {
         return;
     }
     if (captureOutput == self.videoDataOutput) {
