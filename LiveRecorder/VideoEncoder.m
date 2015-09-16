@@ -33,7 +33,7 @@
     return 0;
 }
 
-- (int) encode {
+- (int) encode:(CMSampleBufferRef)sampleBuffer {
     NSLog(@"VideoEncoder encode");
     return 0;
 }

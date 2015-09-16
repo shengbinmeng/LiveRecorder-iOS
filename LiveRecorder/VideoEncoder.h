@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "StreamOutput.h"
+@import AVFoundation;
 
 @interface VideoEncoder : NSObject
 
@@ -19,7 +20,7 @@
 
 - (void) setWidth:(int)width height:(int)height frameRate:(int)frameRate bitrate:(int)bitrate;
 - (int) open;
-- (int) encode;
+- (int) encode:(CMSampleBufferRef)sampleBuffer;
 - (int) close;
 
 @end

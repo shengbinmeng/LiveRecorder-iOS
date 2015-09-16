@@ -6,8 +6,10 @@
 //  Copyright (c) 2015 Shengbin Meng. All rights reserved.
 //
 
-#import "CoreRecorder.h"
 @import CoreImage;
+#import "CoreRecorder.h"
+#import "HardwareVideoEncoder.h"
+#import "FileStreamOutput.h"
 
 @implementation CoreRecorder
 
@@ -42,14 +44,14 @@
 
 - (int) start {
     int ret = 0;
-    self.output = [[StreamOutput alloc] init];
+    self.output = [[FileStreamOutput alloc] init];
     [self.output open:self.outputAddress];
     
     self.audioEncoder = [[AudioEncoder alloc] init];
     self.audioEncoder.output = self.output;
     [self.audioEncoder setSampleRate:self.sampleRate channelCount:self.channelCount bitrate:self.audioBitrate];
     
-    self.videoEncoder = [[VideoEncoder alloc] init];
+    self.videoEncoder = [[HardwareVideoEncoder alloc] init];
     self.videoEncoder.output = self.output;
     [self.videoEncoder setWidth:self.width height:self.height frameRate:self.frameRate bitrate:self.videoBitrate];
     
@@ -69,7 +71,7 @@
         NSLog(@"Bad format");
         return -1;
     }
-    [self.audioEncoder encode];
+    [self.audioEncoder encode:sampleBuffer];
     return ret;
 }
 
@@ -82,7 +84,7 @@
     if (attachments) {
         CFRelease(attachments);
     }
-    [self.videoEncoder encode];
+    [self.videoEncoder encode:sampleBuffer];
     return ret;
 }
 

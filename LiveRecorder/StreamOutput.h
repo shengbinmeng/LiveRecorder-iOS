@@ -7,12 +7,13 @@
 //
 
 #import <Foundation/Foundation.h>
+@import AVFoundation;
 
 @interface StreamOutput : NSObject
 
 - (int) open:(NSString*) address;
-- (int) didReceiveEncodedAudio;
-- (int) didReceiveEncodedVideo;
+- (int) didReceiveEncodedAudio:(CMSampleBufferRef) sampleBuffer;
+- (int) didReceiveEncodedVideo:(CMSampleBufferRef) sampleBuffer;
 - (int) close;
 
 @end

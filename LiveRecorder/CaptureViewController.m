@@ -47,15 +47,6 @@ static void *SessionRunningContext = &SessionRunningContext;
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     
-    int sampleRate = 44100;
-    int channelCount = 2;
-    int audioBitrate = 20000;
-    int width = 640;
-    int height = 480;
-    int frameRate = 30;
-    int videoBitrate = 200000;
-    NSString *outputAddress = @"/";
-    
     self.isRecording = NO;
 
     // Disable UI. The UI is enabled if and only if the session starts running.
@@ -76,13 +67,11 @@ static void *SessionRunningContext = &SessionRunningContext;
     // Check video authorization status. Video access is required and audio access is optional.
     // If audio access is denied, audio is not recorded during movie recording.
     switch ([AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo]) {
-        case AVAuthorizationStatusAuthorized:
-        {
+        case AVAuthorizationStatusAuthorized: {
             // The user has previously granted access to the camera.
             break;
         }
-        case AVAuthorizationStatusNotDetermined:
-        {
+        case AVAuthorizationStatusNotDetermined: {
             // The user has not yet been presented with the option to grant video access.
             // We suspend the session queue to delay session setup until the access request has completed to avoid
             // asking the user for audio access if video access is denied.
@@ -96,14 +85,13 @@ static void *SessionRunningContext = &SessionRunningContext;
             }];
             break;
         }
-        default:
-        {
+        default: {
             // The user has previously denied access.
             self.setupResult = CaptureSetupResultCameraNotAuthorized;
             break;
         }
     }
-    
+
     // Setup the capture session.
     // In general it is not safe to mutate an AVCaptureSession or any of its inputs, outputs, or connections from multiple threads at the same time.
     // Why not do all of this on the main queue?
@@ -114,11 +102,22 @@ static void *SessionRunningContext = &SessionRunningContext;
             return;
         }
         
+        int sampleRate = 44100;
+        int channelCount = 2;
+        int audioBitrate = 20000;
+        int width = 640;
+        int height = 480;
+        int frameRate = 30;
+        int videoBitrate = 200000;
+        NSString *outputAddress = @"/";
+        
         [self.session beginConfiguration];
+        
+        [self.session setSessionPreset:[NSString stringWithString:AVCaptureSessionPreset640x480]];
         
         // Add video input.
         NSError *error = nil;
-        AVCaptureDevice *videoDevice = [CaptureViewController deviceWithMediaType:AVMediaTypeVideo preferringPosition:AVCaptureDevicePositionBack];;
+        AVCaptureDevice *videoDevice = [CaptureViewController deviceWithMediaType:AVMediaTypeVideo preferringPosition:AVCaptureDevicePositionBack];
         AVCaptureDeviceInput *videoDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
         if (!videoDeviceInput) {
             NSLog(@"Could not create video device input: %@", error);
@@ -198,11 +197,10 @@ static void *SessionRunningContext = &SessionRunningContext;
 #endif
         
         [self.session commitConfiguration];
+        
+        self.recorder = [[CoreRecorder alloc] init];
+        [self.recorder setSampleRate:sampleRate channelCount:channelCount audioBitrate:audioBitrate width:width height:height frameRate:frameRate videoBitrate:videoBitrate outputAddress:outputAddress];
     });
-    
-    self.recorder = [[CoreRecorder alloc] init];
-    [self.recorder setSampleRate:sampleRate channelCount:channelCount audioBitrate:audioBitrate width:width height:height frameRate:frameRate videoBitrate:videoBitrate outputAddress:outputAddress];
-
 }
 
 - (void)didReceiveMemoryWarning {
@@ -487,7 +485,6 @@ static void *SessionRunningContext = &SessionRunningContext;
     } else if (captureOutput == self.audioDataOutput) {
         [self.recorder didReceiveAudioSamples:sampleBuffer];
     }
-
 }
 
 #pragma mark Device Configuration

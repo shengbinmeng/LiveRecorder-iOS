@@ -15,12 +15,12 @@
     return 0;
 }
 
-- (int) didReceiveEncodedAudio {
+- (int) didReceiveEncodedAudio:(CMSampleBufferRef) sampleBuffer {
     NSLog(@"StreamOutput didReceiveEncodedAudio");
     return 0;
 }
 
-- (int) didReceiveEncodedVideo {
+- (int) didReceiveEncodedVideo:(CMSampleBufferRef) sampleBuffer {
     NSLog(@"StreamOutput didReceiveEncodedVideo");
     return 0;
 }

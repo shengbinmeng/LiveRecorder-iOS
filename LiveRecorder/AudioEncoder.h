@@ -19,7 +19,7 @@
 
 - (void) setSampleRate:(int)sampleRate channelCount:(int)channelCount bitrate:(int)bitrate;
 - (int) open;
-- (int) encode;
+- (int) encode:(CMSampleBufferRef)sampleBuffer;
 - (int) close;
 
 @end

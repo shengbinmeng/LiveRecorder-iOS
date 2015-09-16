@@ -31,7 +31,7 @@
     return 0;
 }
 
-- (int) encode {
+- (int) encode:(CMSampleBufferRef)sampleBuffer {
     NSLog(@"AudioEncoder encode");
     return 0;
 }
