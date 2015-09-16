@@ -139,10 +139,10 @@
             </objects>
             <point key="canvasLocation" x="1468" y="307"/>
         </scene>
-        <!--Navigation Controller-->
+        <!--Rotation Aware Navigation Controller-->
         <scene sceneID="Fc8-q7-UML">
             <objects>
-                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="E12-HM-P3C" sceneMemberID="viewController">
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="E12-HM-P3C" customClass="RotationAwareNavigationController" sceneMemberID="viewController">
                     <toolbarItems/>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="cLL-T0-HCN">

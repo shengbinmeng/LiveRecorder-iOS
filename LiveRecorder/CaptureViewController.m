@@ -330,6 +330,17 @@ static void *SessionRunningContext = &SessionRunningContext;
             [self.movieFileOutput startRecordingToOutputFileURL:[NSURL fileURLWithPath:outputFilePath] recordingDelegate:self];
         });
     } else {
+        // Update the orientation on the output video connection before starting recording.
+        AVCaptureConnection *connection = [self.videoDataOutput connectionWithMediaType:AVMediaTypeVideo];
+        AVCaptureVideoPreviewLayer *previewLayer = (AVCaptureVideoPreviewLayer *)self.captureView.layer;
+        connection.videoOrientation = previewLayer.connection.videoOrientation;
+        if (connection.videoOrientation == AVCaptureVideoOrientationPortrait || connection.videoOrientation == AVCaptureVideoOrientationPortraitUpsideDown) {
+            int height = self.recorder.height;
+            int width = self.recorder.width;
+            [self.recorder setWidth:height];
+            [self.recorder setHeight:width];
+        }
+        
         // Start our recording.
         [self.recorder start];
         self.cameraButton.enabled = NO;
