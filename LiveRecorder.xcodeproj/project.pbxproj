@@ -14,6 +14,7 @@
 		6C04CE041BA8005800547392 /* HardwareVideoEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C04CE031BA8005800547392 /* HardwareVideoEncoder.m */; };
 		6C04CE071BA80D4700547392 /* FileStreamOutput.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C04CE061BA80D4700547392 /* FileStreamOutput.m */; };
 		6C24F2451BA9526300D4A1BF /* RotationAwareNavigationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C24F2441BA9526300D4A1BF /* RotationAwareNavigationController.m */; };
+		6C24F2481BAA55C400D4A1BF /* HardwareAudioEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C24F2471BAA55C400D4A1BF /* HardwareAudioEncoder.m */; };
 		6C50AF811B9D2153000AF626 /* CaptureView.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C50AF801B9D2153000AF626 /* CaptureView.m */; };
 		6C7862E51B997F5F00E3F318 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C7862E41B997F5F00E3F318 /* main.m */; };
 		6C7862E81B997F5F00E3F318 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C7862E71B997F5F00E3F318 /* AppDelegate.m */; };
@@ -50,6 +51,8 @@
 		6C04CE061BA80D4700547392 /* FileStreamOutput.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileStreamOutput.m; sourceTree = "<group>"; };
 		6C24F2431BA9526300D4A1BF /* RotationAwareNavigationController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RotationAwareNavigationController.h; sourceTree = "<group>"; };
 		6C24F2441BA9526300D4A1BF /* RotationAwareNavigationController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RotationAwareNavigationController.m; sourceTree = "<group>"; };
+		6C24F2461BAA55C400D4A1BF /* HardwareAudioEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HardwareAudioEncoder.h; sourceTree = "<group>"; };
+		6C24F2471BAA55C400D4A1BF /* HardwareAudioEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HardwareAudioEncoder.m; sourceTree = "<group>"; };
 		6C50AF7F1B9D2153000AF626 /* CaptureView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CaptureView.h; sourceTree = "<group>"; };
 		6C50AF801B9D2153000AF626 /* CaptureView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CaptureView.m; sourceTree = "<group>"; };
 		6C7862DF1B997F5F00E3F318 /* LiveRecorder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LiveRecorder.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -90,14 +93,16 @@
 		6C04CE011BA7C05700547392 /* CoreRecorder */ = {
 			isa = PBXGroup;
 			children = (
-				6C04CE021BA8005800547392 /* HardwareVideoEncoder.h */,
-				6C04CE031BA8005800547392 /* HardwareVideoEncoder.m */,
 				6C04CDFE1BA7C02100547392 /* AudioEncoder.h */,
-				6C04CE051BA80D4700547392 /* FileStreamOutput.h */,
-				6C04CE061BA80D4700547392 /* FileStreamOutput.m */,
 				6C04CDFF1BA7C02100547392 /* AudioEncoder.m */,
 				6C04CDF51BA6648B00547392 /* CoreRecorder.h */,
 				6C04CDF61BA6648B00547392 /* CoreRecorder.m */,
+				6C04CE051BA80D4700547392 /* FileStreamOutput.h */,
+				6C04CE061BA80D4700547392 /* FileStreamOutput.m */,
+				6C24F2461BAA55C400D4A1BF /* HardwareAudioEncoder.h */,
+				6C24F2471BAA55C400D4A1BF /* HardwareAudioEncoder.m */,
+				6C04CE021BA8005800547392 /* HardwareVideoEncoder.h */,
+				6C04CE031BA8005800547392 /* HardwareVideoEncoder.m */,
 				6C04CDFB1BA7BB4200547392 /* StreamOutput.h */,
 				6C04CDFC1BA7BB4200547392 /* StreamOutput.m */,
 				6C04CDF81BA664B600547392 /* VideoEncoder.h */,
@@ -217,7 +222,7 @@
 		6C7862D71B997F5F00E3F318 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0640;
+				LastUpgradeCheck = 0700;
 				ORGANIZATIONNAME = "Shengbin Meng";
 				TargetAttributes = {
 					6C7862DE1B997F5F00E3F318 = {
@@ -281,6 +286,7 @@
 				6C7862E81B997F5F00E3F318 /* AppDelegate.m in Sources */,
 				6C04CDF71BA6648B00547392 /* CoreRecorder.m in Sources */,
 				6C24F2451BA9526300D4A1BF /* RotationAwareNavigationController.m in Sources */,
+				6C24F2481BAA55C400D4A1BF /* HardwareAudioEncoder.m in Sources */,
 				6C04CDFA1BA664B600547392 /* VideoEncoder.m in Sources */,
 				6C04CE001BA7C02100547392 /* AudioEncoder.m in Sources */,
 				6C04CDFD1BA7BB4200547392 /* StreamOutput.m in Sources */,
@@ -348,6 +354,7 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -417,6 +424,7 @@
 				INFOPLIST_FILE = LiveRecorder/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "me.shengbin.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -429,6 +437,7 @@
 				INFOPLIST_FILE = LiveRecorder/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "me.shengbin.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -447,6 +456,7 @@
 				);
 				INFOPLIST_FILE = LiveRecorderTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "me.shengbin.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LiveRecorder.app/LiveRecorder";
 			};
@@ -462,6 +472,7 @@
 				);
 				INFOPLIST_FILE = LiveRecorderTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "me.shengbin.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LiveRecorder.app/LiveRecorder";
 			};

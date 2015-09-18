@@ -9,27 +9,10 @@
 @import CoreImage;
 #import "CoreRecorder.h"
 #import "HardwareVideoEncoder.h"
+#import "HardwareAudioEncoder.h"
 #import "FileStreamOutput.h"
 
 @implementation CoreRecorder
-
-- (id) init {
-    self = [super init];
-    if (self) {
-        // These are default values.
-        self.sampleRate = 44100;
-        self.channelCount = 2;
-        self.audioBitrate = 20000;
-        
-        self.width = 640;
-        self.height = 480;
-        self.frameRate = 30;
-        self.videoBitrate = 200000;
-        
-        self.outputAddress = @"/";
-    }
-    return self;
-}
 
 - (void) setSampleRate:(int)sampleRate channelCount:(int)channelCount audioBitrate:(int)audioBitrate width:(int)width height:(int)height frameRate:(int)frameRate videoBitrate:(int)videoBitrate outputAddress:(NSString*) address {
     self.sampleRate = sampleRate;
@@ -43,11 +26,15 @@
 }
 
 - (int) start {
+    if (self.width == 0 || self.height == 0 || self.outputAddress == nil) {
+        NSLog(@"Must at least set width, height and output address before start recorder");
+        return -1;
+    }
     int ret = 0;
     self.output = [[FileStreamOutput alloc] init];
     [self.output open:self.outputAddress];
     
-    self.audioEncoder = [[AudioEncoder alloc] init];
+    self.audioEncoder = [[HardwareAudioEncoder alloc] init];
     self.audioEncoder.output = self.output;
     [self.audioEncoder setSampleRate:self.sampleRate channelCount:self.channelCount bitrate:self.audioBitrate];
     

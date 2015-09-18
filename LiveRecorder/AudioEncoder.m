@@ -10,16 +10,6 @@
 
 @implementation AudioEncoder
 
-- (id) init {
-    self = [super init];
-    if (self) {
-        self.sampleRate = 44100;
-        self.channelCount = 2;
-        self.bitrate = 20000;
-    }
-    return self;
-}
-
 - (void) setSampleRate:(int)sampleRate channelCount:(int)channelCount bitrate:(int)bitrate {
     self.sampleRate = sampleRate;
     self.channelCount = channelCount;
@@ -35,7 +25,6 @@
     NSLog(@"AudioEncoder encode");
     return 0;
 }
-
 
 - (int) close {
     NSLog(@"AudioEncoder close");

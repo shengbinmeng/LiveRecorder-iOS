@@ -10,17 +10,6 @@
 
 @implementation VideoEncoder
 
-- (id) init {
-    self = [super init];
-    if (self) {
-        self.width = 640;
-        self.height = 480;
-        self.frameRate = 30;
-        self.bitrate = 200000;
-    }
-    return self;
-}
-
 - (void) setWidth:(int)width height:(int)height frameRate:(int)frameRate bitrate:(int)bitrate {
     self.width = width;
     self.height = height;

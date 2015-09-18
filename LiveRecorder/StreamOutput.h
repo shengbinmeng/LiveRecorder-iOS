@@ -12,7 +12,7 @@
 @interface StreamOutput : NSObject
 
 - (int) open:(NSString*) address;
-- (int) didReceiveEncodedAudio:(CMSampleBufferRef) sampleBuffer;
+- (int) didReceiveEncodedAudio:(NSData*) audioData presentationTime:(CMTime)pts;
 - (int) didReceiveEncodedVideo:(CMSampleBufferRef) sampleBuffer;
 - (int) close;
 

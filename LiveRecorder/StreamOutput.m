@@ -15,7 +15,7 @@
     return 0;
 }
 
-- (int) didReceiveEncodedAudio:(CMSampleBufferRef) sampleBuffer {
+- (int) didReceiveEncodedAudio:(NSData*) audioData presentationTime:(CMTime)pts {
     NSLog(@"StreamOutput didReceiveEncodedAudio");
     return 0;
 }

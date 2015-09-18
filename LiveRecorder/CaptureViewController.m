@@ -99,21 +99,9 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
             return;
         }
         
-        int sampleRate = 44100;
-        int channelCount = 2;
-        int audioBitrate = 20000;
-        int width = 640;
-        int height = 480;
-        int frameRate = 30;
-        int videoBitrate = 200000;
-        NSString *outputAddress = @"/";
-        
         [self.session beginConfiguration];
         
         [self.session setSessionPreset:[NSString stringWithString:AVCaptureSessionPreset640x480]];
-        // Set the values according to actual configuration.
-        width = 640;
-        height = 480;
         
         // Add video input.
         NSError *error = nil;
@@ -184,6 +172,15 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
         [self.session commitConfiguration];
         
         self.recorder = [[CoreRecorder alloc] init];
+        // Set these values according to actual configuration. Or pass 0 to let the recorder determine itself.
+        int sampleRate = 0;
+        int channelCount = 0;
+        int audioBitrate = 0;
+        int width = 640;
+        int height = 480;
+        int frameRate = 0;
+        int videoBitrate = 0;
+        NSString *outputAddress = @"/";
         [self.recorder setSampleRate:sampleRate channelCount:channelCount audioBitrate:audioBitrate width:width height:height frameRate:frameRate videoBitrate:videoBitrate outputAddress:outputAddress];
     });
 }

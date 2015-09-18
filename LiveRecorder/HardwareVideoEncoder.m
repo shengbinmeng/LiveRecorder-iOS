@@ -11,7 +11,7 @@
 
 @implementation HardwareVideoEncoder
 {
-    VTCompressionSessionRef mEncodingSession;
+    VTCompressionSessionRef _encodingSession;
 }
 
 void didCompressH264(void *outputCallbackRefCon, void *sourceFrameRefCon, OSStatus status, VTEncodeInfoFlags infoFlags, CMSampleBufferRef sampleBuffer) {
@@ -31,7 +31,7 @@ void didCompressH264(void *outputCallbackRefCon, void *sourceFrameRefCon, OSStat
 - (int) open {
     [super open];
     // Create the compression session.
-    OSStatus status = VTCompressionSessionCreate(NULL, self.width, self.height, kCMVideoCodecType_H264, NULL, NULL, NULL, didCompressH264, (__bridge void *)(self),  &mEncodingSession);
+    OSStatus status = VTCompressionSessionCreate(NULL, self.width, self.height, kCMVideoCodecType_H264, NULL, NULL, NULL, didCompressH264, (__bridge void *)(self),  &_encodingSession);
     if (status != 0) {
         NSLog(@"Unable to create a H264 compression session");
         return -1;
@@ -40,13 +40,23 @@ void didCompressH264(void *outputCallbackRefCon, void *sourceFrameRefCon, OSStat
     // Set the properties.
     int keyFrameInterval = 240;
     CFNumberRef keyFrameIntervalRef = CFNumberCreate(NULL, kCFNumberSInt32Type, &keyFrameInterval);
-    VTSessionSetProperty(mEncodingSession, kVTCompressionPropertyKey_MaxKeyFrameInterval, keyFrameIntervalRef);
-    VTSessionSetProperty(mEncodingSession, kVTCompressionPropertyKey_RealTime, kCFBooleanTrue);
-    VTSessionSetProperty(mEncodingSession, kVTCompressionPropertyKey_AllowFrameReordering, kCFBooleanFalse);
-    VTSessionSetProperty(mEncodingSession, kVTCompressionPropertyKey_ProfileLevel,kVTProfileLevel_H264_High_AutoLevel);
+    VTSessionSetProperty(_encodingSession, kVTCompressionPropertyKey_MaxKeyFrameInterval, keyFrameIntervalRef);
+    VTSessionSetProperty(_encodingSession, kVTCompressionPropertyKey_RealTime, kCFBooleanTrue);
+    VTSessionSetProperty(_encodingSession, kVTCompressionPropertyKey_AllowFrameReordering, kCFBooleanFalse);
+    VTSessionSetProperty(_encodingSession, kVTCompressionPropertyKey_ProfileLevel,kVTProfileLevel_H264_High_AutoLevel);
+    if (self.bitrate > 0) {
+        int bitrate = self.bitrate;
+        CFNumberRef bitrateRef = CFNumberCreate(NULL, kCFNumberSInt32Type, &bitrate);
+        VTSessionSetProperty(_encodingSession, kVTCompressionPropertyKey_AverageBitRate, bitrateRef);
+    }
+    if (self.frameRate > 0) {
+        int frameRate = self.frameRate;
+        CFNumberRef frameRateRef = CFNumberCreate(NULL, kCFNumberSInt32Type, &frameRate);
+        VTSessionSetProperty(_encodingSession, kVTCompressionPropertyKey_ExpectedFrameRate, frameRateRef);
+    }
     
     // Tell the encoder to start encoding.
-    VTCompressionSessionPrepareToEncodeFrames(mEncodingSession);
+    VTCompressionSessionPrepareToEncodeFrames(_encodingSession);
     return 0;
 }
 
@@ -56,7 +66,7 @@ void didCompressH264(void *outputCallbackRefCon, void *sourceFrameRefCon, OSStat
     CMTime pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
     NSLog(@"Encode a frame, pts: %lf (%lld)", (double)pts.value / pts.timescale, pts.value);
     VTEncodeInfoFlags flags;
-    OSStatus status = VTCompressionSessionEncodeFrame(mEncodingSession, imageBuffer, pts, kCMTimeInvalid, NULL, NULL, &flags);
+    OSStatus status = VTCompressionSessionEncodeFrame(_encodingSession, imageBuffer, pts, kCMTimeInvalid, NULL, NULL, &flags);
     if (status != noErr) {
         NSLog(@"VTCompressionSessionEncodeFrame failed with statuc %d", (int)status);
         return -1;
@@ -67,9 +77,9 @@ void didCompressH264(void *outputCallbackRefCon, void *sourceFrameRefCon, OSStat
 
 - (int) close {
     [super close];
-    VTCompressionSessionCompleteFrames(mEncodingSession, kCMTimeInvalid);
-    VTCompressionSessionInvalidate(mEncodingSession);
-    CFRelease(mEncodingSession);
+    VTCompressionSessionCompleteFrames(_encodingSession, kCMTimeInvalid);
+    VTCompressionSessionInvalidate(_encodingSession);
+    CFRelease(_encodingSession);
     return 0;
 }
 

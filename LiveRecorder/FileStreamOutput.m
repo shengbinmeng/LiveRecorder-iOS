@@ -10,24 +10,31 @@
 
 @implementation FileStreamOutput
 {
-    NSFileHandle *mVideoFileHandle;
+    NSFileHandle *_videoFileHandle;
+    NSFileHandle *_audioFileHandle;
 }
 
-- (int) open:(NSString*) address{
+- (int) open:(NSString*) address {
     [super open:address];
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentsDirectory = [paths objectAtIndex:0];
     NSString *videoFile = [NSString stringWithFormat:@"%@/%@/video.avc", documentsDirectory, address];
     videoFile = [videoFile stringByStandardizingPath];
+    NSString *audioFile = [NSString stringWithFormat:@"%@/%@/audio.aac", documentsDirectory, address];
+    audioFile = [audioFile stringByStandardizingPath];
     NSFileManager *fileManager = [NSFileManager defaultManager];
     [fileManager removeItemAtPath:videoFile error:nil];
     [fileManager createFileAtPath:videoFile contents:nil attributes:nil];
-    mVideoFileHandle = [NSFileHandle fileHandleForWritingAtPath:videoFile];
+    _videoFileHandle = [NSFileHandle fileHandleForWritingAtPath:videoFile];
+    [fileManager removeItemAtPath:audioFile error:nil];
+    [fileManager createFileAtPath:audioFile contents:nil attributes:nil];
+    _audioFileHandle = [NSFileHandle fileHandleForWritingAtPath:audioFile];
     return 0;
 }
 
-- (int) didReceiveEncodedAudio:(CMSampleBufferRef) sampleBuffer {
-    [super didReceiveEncodedAudio:sampleBuffer];
+- (int) didReceiveEncodedAudio:(NSData*) audioData presentationTime:(CMTime)pts {
+    NSLog(@"Received encoded audio data, length: %lu, pts: %lf (%lld)", (unsigned long)audioData.length, (double)pts.value / pts.timescale, pts.value);
+    [_audioFileHandle writeData:audioData];
     return 0;
 }
 
@@ -56,22 +63,22 @@
                 NSData *sps = [NSData dataWithBytes:spsContent length:spsSize];
                 NSData *pps = [NSData dataWithBytes:ppsContent length:ppsSize];
                 
-                [mVideoFileHandle writeData:prefix];
-                [mVideoFileHandle writeData:sps];
-                [mVideoFileHandle writeData:prefix];
-                [mVideoFileHandle writeData:pps];
+                [_videoFileHandle writeData:prefix];
+                [_videoFileHandle writeData:sps];
+                [_videoFileHandle writeData:prefix];
+                [_videoFileHandle writeData:pps];
+                NSLog(@"Received encoded video data as sps and pps, length %lu and %lu", (unsigned long)sps.length, (unsigned long)pps.length);
             }
         }
     }
     
     CMBlockBufferRef dataBuffer = CMSampleBufferGetDataBuffer(sampleBuffer);
-    CMTime pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
-    NSLog(@"Sample buffer's pts: %lf (%lld)", (double)pts.value / pts.timescale, pts.value);
     size_t lengthAtOffset, totalLength, offset = 0;
     char *dataPointer;
     OSStatus status = CMBlockBufferGetDataPointer(dataBuffer, offset, &lengthAtOffset, &totalLength, &dataPointer);
     if (status == noErr) {
-        NSLog(@"Data buffer's length at offset: %zu, total length: %zu", lengthAtOffset, totalLength);
+        CMTime pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
+        NSLog(@"Received encoded video data, lenght: %zu, pts: %lf (%lld)", totalLength, (double)pts.value / pts.timescale, pts.value);
         static const int AVCCHeaderLength = 4;
         size_t dataOffset = 0;
         while (dataOffset + AVCCHeaderLength < totalLength) {
@@ -87,8 +94,8 @@
             size_t length = sizeof(bytes) - 1; //string literals have implicit trailing '\0'
             NSData *prefix = [NSData dataWithBytes:bytes length:length];
             NSData* nalu = [NSData dataWithBytes:(dataPointer + dataOffset + AVCCHeaderLength) length:nalUnitLength];
-            [mVideoFileHandle writeData:prefix];
-            [mVideoFileHandle writeData:nalu];
+            [_videoFileHandle writeData:prefix];
+            [_videoFileHandle writeData:nalu];
             
             // Move to the next NAL unit in the block buffer.
             dataOffset += AVCCHeaderLength + nalUnitLength;
@@ -100,7 +107,8 @@
 
 - (int) close {
     [super close];
-    [mVideoFileHandle closeFile];
+    [_videoFileHandle closeFile];
+    [_audioFileHandle closeFile];
     return 0;
 }
 
