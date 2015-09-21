@@ -13,7 +13,7 @@
 
 - (int) open:(NSString*) address;
 - (int) didReceiveEncodedAudio:(NSData*) audioData presentationTime:(CMTime)pts;
-- (int) didReceiveEncodedVideo:(CMSampleBufferRef) sampleBuffer;
+- (int) didReceiveEncodedVideo:(NSData*) videoData presentationTime:(CMTime)pts isKeyFrame:(BOOL)keyFrame;
 - (int) close;
 
 @end

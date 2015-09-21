@@ -20,7 +20,7 @@
     return 0;
 }
 
-- (int) didReceiveEncodedVideo:(CMSampleBufferRef) sampleBuffer {
+- (int) didReceiveEncodedVideo:(NSData*) videoData presentationTime:(CMTime)pts isKeyFrame:(BOOL)keyFrame {
     NSLog(@"StreamOutput didReceiveEncodedVideo");
     return 0;
 }

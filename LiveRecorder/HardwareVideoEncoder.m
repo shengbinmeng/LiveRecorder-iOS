@@ -16,7 +16,7 @@
 
 void didCompressH264(void *outputCallbackRefCon, void *sourceFrameRefCon, OSStatus status, VTEncodeInfoFlags infoFlags, CMSampleBufferRef sampleBuffer) {
     if (status != 0) {
-        NSLog(@"didCompressH264 error: %d", status);
+        NSLog(@"didCompressH264 error: %d", (int)status);
         return;
     }
     if (!CMSampleBufferDataIsReady(sampleBuffer)) {
@@ -24,8 +24,74 @@ void didCompressH264(void *outputCallbackRefCon, void *sourceFrameRefCon, OSStat
         return;
     }
     
-    HardwareVideoEncoder* encoder = (__bridge HardwareVideoEncoder*)outputCallbackRefCon;
-    [encoder.output didReceiveEncodedVideo:sampleBuffer];
+    // H.264 bitstream from CMSampleBuffer is in AVCC format. We will transform it to video data of Annex B format before output.
+    NSMutableData *videoData = [NSMutableData dataWithLength:0];
+    
+    // Check if we have got a key frame.
+    CFArrayRef attachmentsArray = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, true);
+    CFDictionaryRef attachments = CFArrayGetValueAtIndex(attachmentsArray, 0);
+    bool isKeyframe = !CFDictionaryContainsKey(attachments, kCMSampleAttachmentKey_NotSync);
+    if (isKeyframe) {
+        NSLog(@"This is a key frame");
+        CMFormatDescriptionRef format = CMSampleBufferGetFormatDescription(sampleBuffer);
+        size_t spsSize, spsCount;
+        const uint8_t *spsContent;
+        OSStatus status = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(format, 0, &spsContent, &spsSize, &spsCount, 0);
+        if (status == noErr) {
+            // Found sps and now check for pps.
+            size_t ppsSize, ppsCount;
+            const uint8_t *ppsContent;
+            OSStatus status = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(format, 1, &ppsContent, &ppsSize, &ppsCount, 0);
+            if (status == noErr) {
+                // Found pps. Add start code prefix and construct data of Annex B format.
+                const char startCode[] = "\x00\x00\x00\x01";
+                size_t startCodeLength = sizeof(startCode) - 1; //string literals have implicit trailing '\0'
+                NSData *prefix = [NSData dataWithBytes:startCode length:startCodeLength];
+                NSData *sps = [NSData dataWithBytes:spsContent length:spsSize];
+                NSData *pps = [NSData dataWithBytes:ppsContent length:ppsSize];
+                [videoData appendData:prefix];
+                [videoData appendData:sps];
+                [videoData appendData:prefix];
+                [videoData appendData:pps];
+                NSLog(@"Found sps and pps, length %lu and %lu", (unsigned long)sps.length, (unsigned long)pps.length);
+            }
+        }
+    }
+    
+    CMBlockBufferRef dataBuffer = CMSampleBufferGetDataBuffer(sampleBuffer);
+    size_t lengthAtOffset, totalLength, offset = 0;
+    char *dataPointer;
+    status = CMBlockBufferGetDataPointer(dataBuffer, offset, &lengthAtOffset, &totalLength, &dataPointer);
+    if (status == noErr) {
+        static const int AVCCHeaderLength = 4;
+        size_t dataOffset = 0;
+        while (dataOffset + AVCCHeaderLength < totalLength) {
+            // Read the NAL unit length.
+            uint32_t nalUnitLength = 0;
+            memcpy(&nalUnitLength, dataPointer + dataOffset, AVCCHeaderLength);
+            
+            // Convert the length value from Big-endian to the host's byte order (Little-endian perhaps).
+            nalUnitLength = CFSwapInt32BigToHost(nalUnitLength);
+            
+            // Transform this NAL unit to Annex B format (replace the AVCC header with start code prefix).
+            const char startCode[] = "\x00\x00\x00\x01";
+            size_t startCodeLength = sizeof(startCode) - 1; //string literals have implicit trailing '\0'
+            NSData *prefix = [NSData dataWithBytes:startCode length:startCodeLength];
+            NSData* nalu = [NSData dataWithBytes:(dataPointer + dataOffset + AVCCHeaderLength) length:nalUnitLength];
+            [videoData appendData:prefix];
+            [videoData appendData:nalu];
+            
+            // Move to the next NAL unit in the block buffer.
+            // Though most of time there is only one NAL unit in a buffer, i.e., this loop only executes once.
+            dataOffset += AVCCHeaderLength + nalUnitLength;
+        }
+    }
+    
+    if (videoData.length > 0) {
+        CMTime pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
+        HardwareVideoEncoder* encoder = (__bridge HardwareVideoEncoder*)outputCallbackRefCon;
+        [encoder.output didReceiveEncodedVideo:videoData presentationTime:pts isKeyFrame:isKeyframe];
+    }
 }
 
 - (int) open {

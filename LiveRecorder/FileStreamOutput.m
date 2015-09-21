@@ -32,76 +32,39 @@
     return 0;
 }
 
+- (NSData*) adtsHeaderForPacketLength:(NSUInteger)packetLength {
+    int adtsLength = 7;
+    char *packet = malloc(sizeof(char) * adtsLength);
+    // Variables Recycled by addADTStoPacket
+    int profile = 2;  //AAC LC
+    int freqIdx = 4;  //44.1KHz
+    int chanCfg = 1;  //MPEG-4 Audio Channel Configuration. 1 Channel front-center
+    NSUInteger fullLength = adtsLength + packetLength;
+    // fill in ADTS data
+    packet[0] = (char)0xFF;	// 11111111  	= syncword
+    packet[1] = (char)0xF9;	// 1111 1 00 1  = syncword MPEG-2 Layer CRC
+    packet[2] = (char)(((profile-1)<<6) + (freqIdx<<2) +(chanCfg>>2));
+    packet[3] = (char)(((chanCfg&3)<<6) + (fullLength>>11));
+    packet[4] = (char)((fullLength&0x7FF) >> 3);
+    packet[5] = (char)(((fullLength&7)<<5) + 0x1F);
+    packet[6] = (char)0xFC;
+    NSData *adtsHeader = [NSData dataWithBytesNoCopy:packet length:adtsLength freeWhenDone:YES];
+    return adtsHeader;
+}
+
 - (int) didReceiveEncodedAudio:(NSData*) audioData presentationTime:(CMTime)pts {
     NSLog(@"Received encoded audio data, length: %lu, pts: %lf (%lld)", (unsigned long)audioData.length, (double)pts.value / pts.timescale, pts.value);
-    [_audioFileHandle writeData:audioData];
+    // Add ADTS header to raw AAC audio data so the audio file written can be played.
+    NSData *adtsHeader = [self adtsHeaderForPacketLength:audioData.length];
+    NSMutableData *adtsAAC = [NSMutableData dataWithData:adtsHeader];
+    [adtsAAC appendData:audioData];
+    [_audioFileHandle writeData:adtsAAC];
     return 0;
 }
 
-- (int) didReceiveEncodedVideo:(CMSampleBufferRef) sampleBuffer {
-    [super didReceiveEncodedVideo:sampleBuffer];
-    // Check if we have got a key frame.
-    CFArrayRef attachmentsArray = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, true);
-    CFDictionaryRef attachments = CFArrayGetValueAtIndex(attachmentsArray, 0);
-    bool isKeyframe = !CFDictionaryContainsKey(attachments, kCMSampleAttachmentKey_NotSync);
-    if (isKeyframe) {
-        NSLog(@"This is a key frame");
-        CMFormatDescriptionRef format = CMSampleBufferGetFormatDescription(sampleBuffer);
-        size_t spsSize, spsCount;
-        const uint8_t *spsContent;
-        OSStatus status = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(format, 0, &spsContent, &spsSize, &spsCount, 0);
-        if (status == noErr) {
-            // Found sps and now check for pps.
-            size_t ppsSize, ppsCount;
-            const uint8_t *ppsContent;
-            OSStatus status = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(format, 1, &ppsContent, &ppsSize, &ppsCount, 0);
-            if (status == noErr) {
-                // Found pps.
-                const char bytes[] = "\x00\x00\x00\x01";
-                size_t length = sizeof(bytes) - 1; //string literals have implicit trailing '\0'
-                NSData *prefix = [NSData dataWithBytes:bytes length:length];
-                NSData *sps = [NSData dataWithBytes:spsContent length:spsSize];
-                NSData *pps = [NSData dataWithBytes:ppsContent length:ppsSize];
-                
-                [_videoFileHandle writeData:prefix];
-                [_videoFileHandle writeData:sps];
-                [_videoFileHandle writeData:prefix];
-                [_videoFileHandle writeData:pps];
-                NSLog(@"Received encoded video data as sps and pps, length %lu and %lu", (unsigned long)sps.length, (unsigned long)pps.length);
-            }
-        }
-    }
-    
-    CMBlockBufferRef dataBuffer = CMSampleBufferGetDataBuffer(sampleBuffer);
-    size_t lengthAtOffset, totalLength, offset = 0;
-    char *dataPointer;
-    OSStatus status = CMBlockBufferGetDataPointer(dataBuffer, offset, &lengthAtOffset, &totalLength, &dataPointer);
-    if (status == noErr) {
-        CMTime pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
-        NSLog(@"Received encoded video data, lenght: %zu, pts: %lf (%lld)", totalLength, (double)pts.value / pts.timescale, pts.value);
-        static const int AVCCHeaderLength = 4;
-        size_t dataOffset = 0;
-        while (dataOffset + AVCCHeaderLength < totalLength) {
-            // Read the NAL unit length.
-            uint32_t nalUnitLength = 0;
-            memcpy(&nalUnitLength, dataPointer + dataOffset, AVCCHeaderLength);
-            
-            // Convert the length value from Big-endian to Little-endian.
-            nalUnitLength = CFSwapInt32BigToHost(nalUnitLength);
-            
-            // Write this NAL unit (including the start code prefix) to file.
-            const char bytes[] = "\x00\x00\x00\x01";
-            size_t length = sizeof(bytes) - 1; //string literals have implicit trailing '\0'
-            NSData *prefix = [NSData dataWithBytes:bytes length:length];
-            NSData* nalu = [NSData dataWithBytes:(dataPointer + dataOffset + AVCCHeaderLength) length:nalUnitLength];
-            [_videoFileHandle writeData:prefix];
-            [_videoFileHandle writeData:nalu];
-            
-            // Move to the next NAL unit in the block buffer.
-            dataOffset += AVCCHeaderLength + nalUnitLength;
-        }
-    }
-    
+- (int) didReceiveEncodedVideo:(NSData*) videoData presentationTime:(CMTime)pts isKeyFrame:(BOOL)keyFrame {
+    NSLog(@"Received encoded video data, length: %lu, pts: %lf (%lld)", (unsigned long)videoData.length, (double)pts.value / pts.timescale, pts.value);
+    [_videoFileHandle writeData:videoData];
     return 0;
 }
 
