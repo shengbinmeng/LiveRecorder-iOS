@@ -180,7 +180,7 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
         int height = 480;
         int frameRate = 0;
         int videoBitrate = 0;
-        NSString *outputAddress = @"/";
+        NSString *outputAddress = @"rtmp://123.57.54.208/origin/TEST_IOS";
         [self.recorder setSampleRate:sampleRate channelCount:channelCount audioBitrate:audioBitrate width:width height:height frameRate:frameRate videoBitrate:videoBitrate outputAddress:outputAddress];
     });
 }

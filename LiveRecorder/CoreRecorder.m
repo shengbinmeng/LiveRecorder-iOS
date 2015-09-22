@@ -11,6 +11,7 @@
 #import "HardwareVideoEncoder.h"
 #import "HardwareAudioEncoder.h"
 #import "FileStreamOutput.h"
+#import "LiveStreamOutput.h"
 
 @implementation CoreRecorder
 
@@ -31,7 +32,7 @@
         return -1;
     }
     int ret = 0;
-    self.output = [[FileStreamOutput alloc] init];
+    self.output = [[LiveStreamOutput alloc] init];
     [self.output open:self.outputAddress];
     
     self.audioEncoder = [[HardwareAudioEncoder alloc] init];
