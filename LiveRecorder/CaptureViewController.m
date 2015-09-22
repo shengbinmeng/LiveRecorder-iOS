@@ -180,7 +180,10 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
         int height = 480;
         int frameRate = 0;
         int videoBitrate = 0;
-        NSString *outputAddress = @"rtmp://123.57.54.208/origin/TEST_IOS";
+        CFUUIDRef uuidRef = CFUUIDCreate(kCFAllocatorDefault);
+        NSString *uuid_str = (NSString *)CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault,uuidRef));
+        NSString *outputAddress = [NSString stringWithFormat:@"rtmp://123.57.54.208/origin/%@",uuid_str];
+        
         [self.recorder setSampleRate:sampleRate channelCount:channelCount audioBitrate:audioBitrate width:width height:height frameRate:frameRate videoBitrate:videoBitrate outputAddress:outputAddress];
     });
 }

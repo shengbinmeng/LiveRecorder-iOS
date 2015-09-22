@@ -50,11 +50,11 @@ typedef struct _FrameList
 } FrameList;
 
 RTMP            *rtmp;
-char            *rtmp_connect_url;
+NSString        *rtmp_connect_url;
 size_t          sps_len;
-const uint8_t   *sps;
+uint8_t         *sps;
 size_t          pps_len;
-const uint8_t   *pps;
+uint8_t         *pps;
 bool			aac_spec_sent;
 bool			sps_pps_sent;
 bool            sps_pps_get;
@@ -135,6 +135,38 @@ char * put_amf_double(char *c, double d)
         co[7] = ci[0];
     }
     return c+8;
+}
+
+bool readOneNaluFromBuf(NaluUnit *nalu, unsigned char * buf, int buf_size, int *cur_pos)
+{
+    int i = *cur_pos;
+    while(i + 2 < buf_size)
+    {
+        if(buf[i] == 0x00 && buf[i+1] == 0x00 && buf[i+2] == 0x01) {
+            i = i + 3;
+            int pos = i;
+            while (pos + 2 < buf_size)
+            {
+                if(buf[pos] == 0x00 && buf[pos+1] == 0x00 && buf[pos+2] == 0x01)
+                    break;
+                pos++;
+            }
+            if(pos+2 == buf_size) {
+                (*nalu).size = pos+2-i;
+            } else {
+                while(buf[pos-1] == 0x00)
+                    pos--;
+                (*nalu).size = pos-i;
+            }
+            (*nalu).type = buf[i] & 0x1f;
+            (*nalu).data = buf + i;
+            *cur_pos = pos;
+            return true;
+        } else {
+            i++;
+        }
+    }
+    return false;
 }
 
 bool send_data(char * buf, int bufLen, int type, unsigned int timestamp)
@@ -246,8 +278,27 @@ bool rtmp_send_video(unsigned char * buf, int len, unsigned char frame_type, int
     return send_frame_data(buf, len, timestamp, RTMP_PACKET_TYPE_VIDEO, frame_type, false);
 }
 
-bool rtmp_send_video_sequential_header()
+bool rtmp_send_video_sequential_header(unsigned char* data, int length)
 {
+    int cur_pos = 0;
+    NaluUnit naluUnit;
+    bool sps_pps_get = false;
+    int frame_size = 0;
+    while(readOneNaluFromBuf(&naluUnit,data,length,&cur_pos))
+    {
+        frame_size += naluUnit.size;
+        if(naluUnit.type == NAL_SPS) {
+            sps_len = naluUnit.size;
+            sps = (unsigned char *)malloc(sps_len);
+            memcpy(sps, naluUnit.data, sps_len);
+        } else if(naluUnit.type == NAL_PPS) {
+            pps_len = naluUnit.size;
+            pps = (unsigned char *)malloc(pps_len);
+            memcpy(pps, naluUnit.data, pps_len);
+            sps_pps_get = true;
+        }
+    }
+    
     if(sps_pps_get)
     {
         int i = 0;
@@ -325,19 +376,16 @@ void *frame_task_execute(void *arg)
 {
     Frame * frame = NULL;
     while(TRUE) {
-        NSLog(@"thread started");
         pthread_mutex_lock(&mutex);
-        while(!frameList || frameList->size == 0)
+        while(frame_sending_thread_started && (!frameList || frameList->size == 0))
         {
             pthread_cond_wait(&cond, &mutex);
-            NSLog(@"thread blocked");
         }
         if(!frame_sending_thread_started)
         {
             pthread_mutex_unlock(&mutex);
             break;
         }
-         NSLog(@"thread running");
         frameList->size --;
         frame = frameList->head;
         frameList->head = frameList->head->next;
@@ -358,7 +406,7 @@ void *frame_task_execute(void *arg)
 
 - (int) open:(NSString*) address {
     rtmp = NULL;
-    rtmp_connect_url = NULL;
+    rtmp_connect_url = [NSString stringWithString:address];
     aac_spec_sent = false;
     sps_pps_sent = false;
     is_connected = false;
@@ -415,9 +463,7 @@ void *frame_task_execute(void *arg)
         return 1;
     }
     int ralativePts = (int)((pts.value - start_time.value) / (pts.timescale / 1000));
-    unsigned char * frame_data;
-    frame_data = (unsigned char *)malloc(audioData.length);
-    memset(frame_data, 0, audioData.length);
+    unsigned char * frame_data = (unsigned char *)malloc(audioData.length);
     memcpy(frame_data, (unsigned char *)audioData.bytes, audioData.length);
     
     pthread_mutex_lock(&mutex);
@@ -447,77 +493,94 @@ void *frame_task_execute(void *arg)
     return 0;
 }
 
-- (int) didReceiveEncodedVideo:(CMSampleBufferRef) sampleBuffer {
+
+
+- (int) didReceiveEncodedVideo:(NSData*) videoData presentationTime:(CMTime)pts isKeyFrame:(BOOL)keyFrame {
+    if(!start_time_get)
+        start_time = pts;
+    int ralativePts = (int)((pts.value - start_time.value) / (pts.timescale / 1000));
+    int data_length = (int)videoData.length;
+    unsigned char * data = (unsigned char *)videoData.bytes;
+    
+    int frame_size = 0, i = 0;
     unsigned char frame_type = NAL_SLICE;
-    CFArrayRef attachmentsArray = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, true);
-    CFDictionaryRef attachments = CFArrayGetValueAtIndex(attachmentsArray, 0);
-    bool isKeyframe = !CFDictionaryContainsKey(attachments, kCMSampleAttachmentKey_NotSync);
-    if (isKeyframe && !sps_pps_sent) {
-        NSLog(@"This is a key frame");
-        CMFormatDescriptionRef format = CMSampleBufferGetFormatDescription(sampleBuffer);
-        size_t spsCount;
-        OSStatus status = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(format, 0, &sps, &sps_len, &spsCount, 0);
-        if (status == noErr) {
-            // Found sps and now check for pps.
-            size_t ppsCount;
-            OSStatus status = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(format, 1, &pps, &pps_len, &ppsCount, 0);
-            if (status == noErr) {
-                // Found pps.
-                sps_pps_get = true;
-                if (!rtmp_send_video_sequential_header() || !rtmp_send_aac_spec()) {
-                    return 1;
-                }
-            }
+    int cur_pos = 0;
+    unsigned char * frame_data;
+    
+    if(!is_connected)
+    {
+        [self close];
+        if(!rtmp_connect_url)
+            return 1;
+        if(! [self open:rtmp_connect_url])
+            return 1;
+        else {
+            is_connected = true;
+            sps_pps_sent = false;
+            aac_spec_sent = false;
         }
     }
-    if (!sps_pps_sent) {
-        return 1;
-    }
     
-    if (isKeyframe) {
-        frame_type = NAL_SLICE_IDR;
-    }
+    NaluUnit naluUnit;
     
-    CMBlockBufferRef dataBuffer = CMSampleBufferGetDataBuffer(sampleBuffer);
-    size_t lengthAtOffset, totalLength, offset = 0;
-    char *dataPointer;
-    OSStatus status = CMBlockBufferGetDataPointer(dataBuffer, offset, &lengthAtOffset, &totalLength, &dataPointer);
-    if (status == noErr) {
-        CMTime time = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
-        if(!start_time_get)
-            start_time = time;
-        int ralativePts = (int)((time.value - start_time.value) / (time.timescale / 1000));
-        
-        unsigned char * frame_data = (unsigned char *)malloc(totalLength);
-        memcpy(frame_data, dataBuffer, totalLength);
-        pthread_mutex_lock(&mutex);
-        if (frameList && frameList->size < FrameListSizeLimit)
-        {
-            Frame * frame = (Frame*)malloc(sizeof(Frame));
-            frame->size = (int)totalLength;
-            NSLog(@"video frame origin size: %d", (int)totalLength);
-            frame->data = frame_data;
-            frame->packet_type = RTMP_PACKET_TYPE_VIDEO;
-            frame->frame_type = frame_type;
-            frame->pts = ralativePts;
-            frame->next = NULL;
-            if(frameList->size == 0)
-            {
-                frameList->head = frame;
-                frameList->tail = frame;
-            } else {
-                frameList->tail->next = frame;
-                frameList->tail = frame;
-            }
-            frameList->size ++;
-            pthread_cond_broadcast(&cond);
+    if(!sps_pps_sent)
+    {
+        bool is_sent = rtmp_send_video_sequential_header((unsigned char*)data, data_length);
+        if(is_sent) {
+            rtmp_send_aac_spec();
         } else {
-            free(frame_data);
+            return 1;
         }
-        pthread_mutex_unlock(&mutex);
-        
-        NSLog(@"Received encoded video data, lenght: %zu, pts: %lf (%lld)", totalLength, (double)time.value / time.timescale, time.value);
     }
+    
+    while(readOneNaluFromBuf(&naluUnit,(unsigned char*)data,data_length,&cur_pos))
+    {
+        if(naluUnit.type == NAL_SPS || naluUnit.type == NAL_PPS || naluUnit.type == NAL_AUD)
+            continue;
+        frame_size += naluUnit.size + 4;
+    }
+    
+    cur_pos = 0;
+    frame_data = (unsigned char *)malloc(frame_size);
+    memset(frame_data, 0, frame_size);
+    
+    while(readOneNaluFromBuf(&naluUnit,(unsigned char*)data,data_length,&cur_pos))
+    {
+        if(naluUnit.type == NAL_SPS || naluUnit.type == NAL_PPS || naluUnit.type == NAL_AUD)
+            continue;
+        frame_data[i++] = (naluUnit.size >> 24) & 0xff;
+        frame_data[i++] = (naluUnit.size >> 16) & 0xff;
+        frame_data[i++] = (naluUnit.size >> 8) & 0xff;
+        frame_data[i++] = naluUnit.size & 0xff;
+        memcpy(frame_data+i, naluUnit.data, naluUnit.size);
+        i += naluUnit.size;
+        frame_type = naluUnit.type;
+    }
+    
+    pthread_mutex_lock(&mutex);
+    if (frameList && frameList->size < FrameListSizeLimit)
+    {
+        Frame * frame = (Frame*)malloc(sizeof(Frame));
+        frame->size = frame_size;
+        frame->data = frame_data;
+        frame->packet_type = RTMP_PACKET_TYPE_VIDEO;
+        frame->frame_type = frame_type;
+        frame->pts = ralativePts;
+        frame->next = NULL;
+        if(frameList->size == 0)
+        {
+            frameList->head = frame;
+            frameList->tail = frame;
+        } else {
+            frameList->tail->next = frame;
+            frameList->tail = frame;
+        }
+        frameList->size ++;
+        pthread_cond_broadcast(&cond);
+    } else {
+        free(frame_data);
+    }
+    pthread_mutex_unlock(&mutex);
     return 0;
 }
 
