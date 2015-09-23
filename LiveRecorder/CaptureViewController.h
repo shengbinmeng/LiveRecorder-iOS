@@ -10,4 +10,8 @@
 #import <AVFoundation/AVFoundation.h>
 
 @interface CaptureViewController : UIViewController
+
+@property (nonatomic) NSString *configuration;
+@property (nonatomic) NSString *outputAddress;
+
 @end

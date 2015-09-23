@@ -7,7 +7,7 @@
 //
 
 #import "HardwareVideoEncoder.h"
-@import VideoToolbox;
+#import <VideoToolbox/VideoToolbox.h>
 
 @implementation HardwareVideoEncoder
 {

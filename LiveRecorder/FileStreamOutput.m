@@ -53,6 +53,7 @@
 }
 
 - (int) didReceiveEncodedAudio:(NSData*) audioData presentationTime:(CMTime)pts {
+    [super didReceiveEncodedAudio:audioData presentationTime:pts];
     NSLog(@"Received encoded audio data, length: %lu, pts: %lf (%lld)", (unsigned long)audioData.length, (double)pts.value / pts.timescale, pts.value);
     // Add ADTS header to raw AAC audio data so the audio file written can be played.
     NSData *adtsHeader = [self adtsHeaderForPacketLength:audioData.length];
@@ -63,6 +64,7 @@
 }
 
 - (int) didReceiveEncodedVideo:(NSData*) videoData presentationTime:(CMTime)pts isKeyFrame:(BOOL)keyFrame {
+    [super didReceiveEncodedVideo:videoData presentationTime:pts isKeyFrame:keyFrame];
     NSLog(@"Received encoded video data, length: %lu, pts: %lf (%lld)", (unsigned long)videoData.length, (double)pts.value / pts.timescale, pts.value);
     [_videoFileHandle writeData:videoData];
     return 0;

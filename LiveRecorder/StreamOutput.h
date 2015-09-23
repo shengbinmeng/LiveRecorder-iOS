@@ -7,9 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
-@import AVFoundation;
+#import <AVFoundation/AVFoundation.h>
 
 @interface StreamOutput : NSObject
+
+@property double videoBitrateInKbps;
+@property double audioBitrateInKbps;
 
 - (int) open:(NSString*) address;
 - (int) didReceiveEncodedAudio:(NSData*) audioData presentationTime:(CMTime)pts;

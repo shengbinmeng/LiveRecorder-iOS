@@ -7,8 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <AVFoundation/AVFoundation.h>
 #import "StreamOutput.h"
-@import AVFoundation;
 
 @interface VideoEncoder : NSObject
 

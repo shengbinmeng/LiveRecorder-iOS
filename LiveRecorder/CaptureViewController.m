@@ -17,11 +17,12 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
     CaptureSetupResultSessionConfigurationFailed
 };
 
-@interface CaptureViewController () <AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate>
+@interface CaptureViewController () <AVCaptureVideoDataOutputSampleBufferDelegate, AVCaptureAudioDataOutputSampleBufferDelegate, CoreRecorderDelegate>
 
 @property (strong, nonatomic) IBOutlet CaptureView *captureView;
 @property (strong, nonatomic) IBOutlet UIButton *cameraButton;
 @property (strong, nonatomic) IBOutlet UIButton *recordButton;
+@property (strong, nonatomic) IBOutlet UILabel *infoLabel;
 
 @property (nonatomic) dispatch_queue_t sessionQueue;
 @property (nonatomic) AVCaptureSession *session;
@@ -35,10 +36,15 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
 @property (nonatomic) BOOL isRecording;
 
 @property (nonatomic) CoreRecorder *recorder;
+@property (atomic) NSString *recorderInfo;
 
 @end
 
 @implementation CaptureViewController
+{
+    long _frameCount;
+    NSDate *_frameCountBeginTime;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -49,6 +55,8 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
     // Disable UI. The UI is enabled if and only if the session starts running.
     self.cameraButton.enabled = NO;
     self.recordButton.enabled = NO;
+    self.infoLabel.text = nil;
+
     
     // Create the AVCaptureSession.
     self.session = [[AVCaptureSession alloc] init];
@@ -172,6 +180,7 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
         [self.session commitConfiguration];
         
         self.recorder = [[CoreRecorder alloc] init];
+        
         // Set these values according to actual configuration. Or pass 0 to let the recorder determine itself.
         int sampleRate = 0;
         int channelCount = 0;
@@ -183,8 +192,34 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
         CFUUIDRef uuidRef = CFUUIDCreate(kCFAllocatorDefault);
         NSString *uuid_str = (NSString *)CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault,uuidRef));
         NSString *outputAddress = [NSString stringWithFormat:@"rtmp://123.57.54.208/origin/%@",uuid_str];
+        CREncoderType videoEncoderType = CREncoderTypeHardwareVideo;
+        
+        if (self.configuration != nil) {
+            NSArray *configArray = [self.configuration componentsSeparatedByString:@" "];
+            NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+            for (NSString *config in configArray) {
+                NSArray *pair = [config componentsSeparatedByString:@":"];
+                NSString *name = [pair objectAtIndex:0];
+                NSString *value = [pair objectAtIndex:1];
+                if ([name caseInsensitiveCompare:@"videoBitrate"] == NSOrderedSame) {
+                    videoBitrate = [formatter numberFromString:value].intValue;
+                } else if ([name caseInsensitiveCompare:@"videoEncoder"] == NSOrderedSame) {
+                    if ([value caseInsensitiveCompare:@"hardware"] == NSOrderedSame) {
+                        videoEncoderType = CREncoderTypeHardwareVideo;
+                    } else if ([value caseInsensitiveCompare:@"software"] == NSOrderedSame) {
+                        videoEncoderType = CREncoderTypeSoftwareVideo;
+                    }
+                }
+            }
+        }
+        
+        if (self.outputAddress != nil) {
+            outputAddress = self.outputAddress;
+        }
         
         [self.recorder setSampleRate:sampleRate channelCount:channelCount audioBitrate:audioBitrate width:width height:height frameRate:frameRate videoBitrate:videoBitrate outputAddress:outputAddress];
+        self.recorder.videoEncoderType = videoEncoderType;
+        self.recorder.delegate = self;
     });
 }
 
@@ -312,6 +347,7 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
     self.isRecording = NO;
     self.cameraButton.enabled = ([AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo].count > 1);
     [self.recordButton setTitle:NSLocalizedString(@"Start", @"Recording button record title") forState:UIControlStateNormal];
+    [self.infoLabel setText:nil];
     [self.recorder stop];
 }
 
@@ -381,6 +417,26 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
     }
     if (captureOutput == self.videoDataOutput) {
         [self.recorder didReceiveVideoSamples:sampleBuffer];
+        if (_frameCountBeginTime == nil) {
+            _frameCountBeginTime = [NSDate date];
+            _frameCount = 0;
+        } else {
+            _frameCount++;
+            NSDate *currentTime = [NSDate date];
+            NSTimeInterval interval = [currentTime timeIntervalSinceDate:_frameCountBeginTime];
+            if (interval > 1.0) {
+                double frameRate = _frameCount / interval;
+                _frameCountBeginTime = currentTime;
+                _frameCount = 0;
+                
+                NSString *videoInfo = [NSString stringWithFormat:@"Video size: %dx%d, frame rate: %.1f", self.recorder.width, self.recorder.height, frameRate];
+                NSString *bitrateInfo = [NSString stringWithFormat:@"Video bitrate %.1f kbps, audio bitrate: %.1f kbps", self.recorder.output.videoBitrateInKbps, self.recorder.output.audioBitrateInKbps];
+                NSString *infoText = [NSString stringWithFormat:@"%@;%@", videoInfo, bitrateInfo];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.infoLabel setText:infoText];
+                });
+            }
+        }
     } else if (captureOutput == self.audioDataOutput) {
         [self.recorder didReceiveAudioSamples:sampleBuffer];
     }
@@ -398,6 +454,14 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
         }
     }
     return captureDevice;
+}
+
+- (void)recorder:(CoreRecorder *)recorder didStartRecording:(NSString *)information {
+    
+}
+
+- (void)recorder:(CoreRecorder *)recorder didStopRecording:(NSString *)information {
+    
 }
 
 

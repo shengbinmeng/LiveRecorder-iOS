@@ -27,7 +27,6 @@
     return 0;
 }
 
-
 - (int) close {
     NSLog(@"VideoEncoder close");
     return 0;

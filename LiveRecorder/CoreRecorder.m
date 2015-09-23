@@ -6,7 +6,7 @@
 //  Copyright (c) 2015 Shengbin Meng. All rights reserved.
 //
 
-@import CoreImage;
+#import <CoreImage/CoreImage.h>
 #import "CoreRecorder.h"
 #import "HardwareVideoEncoder.h"
 #import "HardwareAudioEncoder.h"
@@ -48,6 +48,7 @@
     [self.audioEncoder open];
     [self.videoEncoder open];
     NSLog(@"Recorder started.");
+    [self.delegate recorder:self didStartRecording:nil];
     return ret;
 }
 
@@ -84,6 +85,7 @@
     [self.videoEncoder close];
     [self.output close];
     NSLog(@"Recorder stopped.");
+    [self.delegate recorder:self didStopRecording:nil];
     return ret;
 }
 
