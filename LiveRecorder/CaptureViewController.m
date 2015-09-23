@@ -143,9 +143,9 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
         // Add video data output.
         AVCaptureVideoDataOutput *videoDataOutput = [AVCaptureVideoDataOutput new];
         [videoDataOutput setAlwaysDiscardsLateVideoFrames:YES];
-        NSDictionary *rgbOutputSettings = [NSDictionary dictionaryWithObject:
-                                           [NSNumber numberWithInt:kCMPixelFormat_32BGRA] forKey:(id)kCVPixelBufferPixelFormatTypeKey];
-        [videoDataOutput setVideoSettings:rgbOutputSettings];
+        NSDictionary *rawOutputSettings = [NSDictionary dictionaryWithObject:
+                                           [NSNumber numberWithInt:kCVPixelFormatType_420YpCbCr8BiPlanarFullRange] forKey:(id)kCVPixelBufferPixelFormatTypeKey];
+        [videoDataOutput setVideoSettings:rawOutputSettings];
         dispatch_queue_t videoDataOutputQueue = dispatch_queue_create("VideoDataOutputQueue", DISPATCH_QUEUE_SERIAL);
         [videoDataOutput setSampleBufferDelegate:self queue:videoDataOutputQueue];
         

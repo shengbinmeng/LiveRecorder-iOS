@@ -26,6 +26,8 @@
 		6C78630D1B99842E00E3F318 /* CaptureViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C78630C1B99842E00E3F318 /* CaptureViewController.m */; };
 		881D080C1BB11CE20028405F /* LiveStreamOutput.m in Sources */ = {isa = PBXBuildFile; fileRef = 881D080B1BB11CE20028405F /* LiveStreamOutput.m */; settings = {ASSET_TAGS = (); }; };
 		881D081C1BB11CF90028405F /* librtmp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 881D081B1BB11CF90028405F /* librtmp.a */; settings = {ASSET_TAGS = (); }; };
+		F78BE2391BB25F57008FF0E1 /* libx264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F78BE2381BB25F57008FF0E1 /* libx264.a */; settings = {ASSET_TAGS = (); }; };
+		F78BE23C1BB25F68008FF0E1 /* SoftwareVideoEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = F78BE23B1BB25F68008FF0E1 /* SoftwareVideoEncoder.m */; settings = {ASSET_TAGS = (); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -85,6 +87,11 @@
 		881D08181BB11CF90028405F /* rtmp_sys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rtmp_sys.h; sourceTree = "<group>"; };
 		881D08191BB11CF90028405F /* SpsDecode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpsDecode.h; sourceTree = "<group>"; };
 		881D081B1BB11CF90028405F /* librtmp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = librtmp.a; sourceTree = "<group>"; };
+		F78BE2351BB25F57008FF0E1 /* x264.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = x264.h; sourceTree = "<group>"; };
+		F78BE2361BB25F57008FF0E1 /* x264_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = x264_config.h; sourceTree = "<group>"; };
+		F78BE2381BB25F57008FF0E1 /* libx264.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libx264.a; sourceTree = "<group>"; };
+		F78BE23A1BB25F68008FF0E1 /* SoftwareVideoEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SoftwareVideoEncoder.h; sourceTree = "<group>"; };
+		F78BE23B1BB25F68008FF0E1 /* SoftwareVideoEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SoftwareVideoEncoder.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,6 +100,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				881D081C1BB11CF90028405F /* librtmp.a in Frameworks */,
+				F78BE2391BB25F57008FF0E1 /* libx264.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -109,6 +117,8 @@
 		6C04CE011BA7C05700547392 /* CoreRecorder */ = {
 			isa = PBXGroup;
 			children = (
+				F78BE23A1BB25F68008FF0E1 /* SoftwareVideoEncoder.h */,
+				F78BE23B1BB25F68008FF0E1 /* SoftwareVideoEncoder.m */,
 				6C04CDFE1BA7C02100547392 /* AudioEncoder.h */,
 				6C04CDFF1BA7C02100547392 /* AudioEncoder.m */,
 				6C04CDF51BA6648B00547392 /* CoreRecorder.h */,
@@ -200,6 +210,7 @@
 		881D080D1BB11CF90028405F /* thirdparty */ = {
 			isa = PBXGroup;
 			children = (
+				F78BE2331BB25F57008FF0E1 /* libx264 */,
 				881D080E1BB11CF90028405F /* librtmp */,
 			);
 			name = thirdparty;
@@ -236,6 +247,32 @@
 			isa = PBXGroup;
 			children = (
 				881D081B1BB11CF90028405F /* librtmp.a */,
+			);
+			path = lib;
+			sourceTree = "<group>";
+		};
+		F78BE2331BB25F57008FF0E1 /* libx264 */ = {
+			isa = PBXGroup;
+			children = (
+				F78BE2341BB25F57008FF0E1 /* include */,
+				F78BE2371BB25F57008FF0E1 /* lib */,
+			);
+			path = libx264;
+			sourceTree = "<group>";
+		};
+		F78BE2341BB25F57008FF0E1 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				F78BE2351BB25F57008FF0E1 /* x264.h */,
+				F78BE2361BB25F57008FF0E1 /* x264_config.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		F78BE2371BB25F57008FF0E1 /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				F78BE2381BB25F57008FF0E1 /* libx264.a */,
 			);
 			path = lib;
 			sourceTree = "<group>";
@@ -346,6 +383,7 @@
 				6C04CE041BA8005800547392 /* HardwareVideoEncoder.m in Sources */,
 				6C78630D1B99842E00E3F318 /* CaptureViewController.m in Sources */,
 				6C7862E81B997F5F00E3F318 /* AppDelegate.m in Sources */,
+				F78BE23C1BB25F68008FF0E1 /* SoftwareVideoEncoder.m in Sources */,
 				6C04CDF71BA6648B00547392 /* CoreRecorder.m in Sources */,
 				6C24F2451BA9526300D4A1BF /* RotationAwareNavigationController.m in Sources */,
 				6C24F2481BAA55C400D4A1BF /* HardwareAudioEncoder.m in Sources */,
@@ -483,15 +521,19 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = LiveRecorder/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/LiveRecorder/thirdparty/librtmp/lib",
+					"$(PROJECT_DIR)/LiveRecorder/thirdparty/libx264/lib",
 				);
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "me.shengbin.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALID_ARCHS = armv7;
 			};
 			name = Debug;
 		};
@@ -500,15 +542,19 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = LiveRecorder/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/LiveRecorder/thirdparty/librtmp/lib",
+					"$(PROJECT_DIR)/LiveRecorder/thirdparty/libx264/lib",
 				);
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "me.shengbin.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALID_ARCHS = armv7;
 			};
 			name = Release;
 		};

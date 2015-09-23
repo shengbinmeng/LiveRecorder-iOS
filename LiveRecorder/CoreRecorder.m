@@ -10,6 +10,7 @@
 #import "CoreRecorder.h"
 #import "HardwareVideoEncoder.h"
 #import "HardwareAudioEncoder.h"
+#import "SoftwareVideoEncoder.h"
 #import "FileStreamOutput.h"
 #import "LiveStreamOutput.h"
 
@@ -39,6 +40,7 @@
     self.audioEncoder.output = self.output;
     [self.audioEncoder setSampleRate:self.sampleRate channelCount:self.channelCount bitrate:self.audioBitrate];
     
+ //   self.videoEncoder = [[SoftwareVideoEncoder alloc] init];
     self.videoEncoder = [[HardwareVideoEncoder alloc] init];
     self.videoEncoder.output = self.output;
     [self.videoEncoder setWidth:self.width height:self.height frameRate:self.frameRate bitrate:self.videoBitrate];
