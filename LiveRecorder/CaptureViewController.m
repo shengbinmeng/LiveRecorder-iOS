@@ -192,7 +192,7 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
         CREncoderType videoEncoderType = CREncoderTypeHardwareVideo;
         NSString *outputAddress = @"/";
         
-        if (self.configuration != nil) {
+        if (self.configuration != nil && ![self.configuration isEqualToString:@""]) {
             NSArray *configArray = [self.configuration componentsSeparatedByString:@" "];
             NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
             for (NSString *config in configArray) {
@@ -211,7 +211,7 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
             }
         }
         
-        if (self.outputAddress != nil) {
+        if (self.outputAddress != nil && ![self.outputAddress isEqualToString:@""]) {
             outputAddress = self.outputAddress;
         }
         

@@ -22,14 +22,15 @@
     // Do any additional setup after loading the view, typically from a nib.
     [self.configTextField setDelegate:self];
     [self.addressTextField setDelegate:self];
-    if (self.configTextField.text == nil) {
+    if (self.configTextField.text == nil || [self.configTextField.text isEqualToString:@""]) {
         NSString *defaultConfig = @"videoBitrate:500 videoEncoder:software";
         self.configTextField.text = defaultConfig;
     }
-    if (self.addressTextField.text == nil) {
+    if (self.addressTextField.text == nil || [self.addressTextField.text isEqualToString:@""]) {
         CFUUIDRef uuidRef = CFUUIDCreate(kCFAllocatorDefault);
         NSString *uuidStr = (NSString *)CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault, uuidRef));
-        NSString *defaultAddress = [NSString stringWithFormat:@"rtmp://rtmpserver1.test.strongene.com/origin/%@", uuidStr];
+        // UUID is too long so we only use the first 8 chars of it.
+        NSString *defaultAddress = [NSString stringWithFormat:@"rtmp://rtmpserver1.test.strongene.com/origin/%@", [uuidStr substringToIndex:8]];
         self.addressTextField.text = defaultAddress;
     }
 }
