@@ -33,21 +33,29 @@
         return -1;
     }
     int ret = 0;
-    self.output = [[LiveStreamOutput alloc] init];
+    if ([self.outputAddress containsString:@":"]) {
+        // Simply think this is live address.
+        self.output = [[LiveStreamOutput alloc] init];
+    } else {
+        self.output = [[FileStreamOutput alloc] init];
+    }
     [self.output open:self.outputAddress];
     
     self.audioEncoder = [[HardwareAudioEncoder alloc] init];
     self.audioEncoder.output = self.output;
     [self.audioEncoder setSampleRate:self.sampleRate channelCount:self.channelCount bitrate:self.audioBitrate];
     
- //   self.videoEncoder = [[SoftwareVideoEncoder alloc] init];
-    self.videoEncoder = [[HardwareVideoEncoder alloc] init];
+    if (self.videoEncoderType == CREncoderTypeSoftwareVideo) {
+        self.videoEncoder = [[SoftwareVideoEncoder alloc] init];
+    } else {
+        self.videoEncoder = [[HardwareVideoEncoder alloc] init];
+    }
     self.videoEncoder.output = self.output;
     [self.videoEncoder setWidth:self.width height:self.height frameRate:self.frameRate bitrate:self.videoBitrate];
     
     [self.audioEncoder open];
     [self.videoEncoder open];
-    NSLog(@"Recorder started.");
+
     [self.delegate recorder:self didStartRecording:nil];
     return ret;
 }
@@ -84,7 +92,6 @@
     [self.audioEncoder close];
     [self.videoEncoder close];
     [self.output close];
-    NSLog(@"Recorder stopped.");
     [self.delegate recorder:self didStopRecording:nil];
     return ret;
 }

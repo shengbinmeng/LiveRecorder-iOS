@@ -22,6 +22,16 @@
     // Do any additional setup after loading the view, typically from a nib.
     [self.configTextField setDelegate:self];
     [self.addressTextField setDelegate:self];
+    if (self.configTextField.text == nil) {
+        NSString *defaultConfig = @"videoBitrate:500 videoEncoder:software";
+        self.configTextField.text = defaultConfig;
+    }
+    if (self.addressTextField.text == nil) {
+        CFUUIDRef uuidRef = CFUUIDCreate(kCFAllocatorDefault);
+        NSString *uuidStr = (NSString *)CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault, uuidRef));
+        NSString *defaultAddress = [NSString stringWithFormat:@"rtmp://rtmpserver1.test.strongene.com/origin/%@", uuidStr];
+        self.addressTextField.text = defaultAddress;
+    }
 }
 
 - (void)didReceiveMemoryWarning {

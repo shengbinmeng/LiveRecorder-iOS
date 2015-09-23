@@ -189,10 +189,8 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
         int height = 480;
         int frameRate = 0;
         int videoBitrate = 0;
-        CFUUIDRef uuidRef = CFUUIDCreate(kCFAllocatorDefault);
-        NSString *uuid_str = (NSString *)CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault,uuidRef));
-        NSString *outputAddress = [NSString stringWithFormat:@"rtmp://123.57.54.208/origin/%@",uuid_str];
         CREncoderType videoEncoderType = CREncoderTypeHardwareVideo;
+        NSString *outputAddress = @"/";
         
         if (self.configuration != nil) {
             NSArray *configArray = [self.configuration componentsSeparatedByString:@" "];
@@ -456,12 +454,14 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
     return captureDevice;
 }
 
+#pragma mark Core Recorder Delegate
+
 - (void)recorder:(CoreRecorder *)recorder didStartRecording:(NSString *)information {
-    
+    NSLog(@"Recorder started.");
 }
 
 - (void)recorder:(CoreRecorder *)recorder didStopRecording:(NSString *)information {
-    
+    NSLog(@"Recorder stopped.");
 }
 
 
