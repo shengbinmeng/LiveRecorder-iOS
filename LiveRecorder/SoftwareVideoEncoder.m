@@ -36,7 +36,7 @@ static void  int_to_str(int value, char *str) {
         x264_bitrate = self.bitrate;
     }
     if (self.frameRate == 0) {
-        self.frameRate = 25;
+        self.frameRate = 15;
     }
     
     if (x264_bitrate <= 0 || self.frameRate <= 0)
@@ -88,13 +88,14 @@ static void  int_to_str(int value, char *str) {
     x264_picture_t pic;
     int i;
     int payload_size = 0;
+    CMTime time;
     
     if (sampleBuffer != NULL) {
         int x, y;
         CVImageBufferRef imageBuffer = (CVImageBufferRef)CMSampleBufferGetImageBuffer(sampleBuffer);
         CMTime pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
         CVPixelBufferLockBaseAddress(imageBuffer, 0);
-        
+        time = pts;
         uint8_t* pixel_y = (uint8_t *)CVPixelBufferGetBaseAddressOfPlane(imageBuffer, 0);
         uint8_t* pixel_uv = (uint8_t *)CVPixelBufferGetBaseAddressOfPlane(imageBuffer, 1);
         
@@ -140,9 +141,8 @@ static void  int_to_str(int value, char *str) {
         NSMutableData *videoData = [NSMutableData dataWithLength:0];
         [videoData appendData:[NSData dataWithBytes:nal[0].p_payload length:payload_size]];
         //TODO: is this correct?
-        CMTime time;
         time.value = pic_out.i_pts;
-        time.timescale = 1000000000;
+
         [[self output] didReceiveEncodedVideo:videoData presentationTime:time isKeyFrame:pic_out.b_keyframe];
         
         return payload_size;
@@ -166,6 +166,7 @@ end:
         x264_encoder_close(h);
         free(u_plane);
         free(v_plane);
+        h = NULL;
     }
     return 0;
 }
