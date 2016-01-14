@@ -25,10 +25,7 @@ static void  int_to_str(int value, char *str) {
     
     char bitrate_str[20];
     char fps_str[20];
-    char vbv_bufsize_str[20];
-    char vbv_maxrate[20];
     int x264_bitrate = self.bitrate;
-    int b_cbr = 0;
     
     //The default value when user didn't set.
     if (self.bitrate == 0) {
@@ -44,15 +41,13 @@ static void  int_to_str(int value, char *str) {
     
     int_to_str(self.frameRate, fps_str);
     int_to_str(x264_bitrate, bitrate_str);
-    int_to_str(x264_bitrate*2, vbv_maxrate);
-    int_to_str(x264_bitrate/self.frameRate, vbv_bufsize_str);
     
     if( x264_param_default_preset( &param, "superfast", "zerolatency" ) < 0 )
         return -1;
     
-    x264_param_parse( &param, "bitrate", bitrate_str );
-    x264_param_parse( &param, "vbv-maxrate", vbv_maxrate);
-    x264_param_parse( &param, "vbv-bufsize", b_cbr ? vbv_bufsize_str : bitrate_str);
+    x264_param_parse( &param, "bitrate",     bitrate_str );
+    x264_param_parse( &param, "vbv-maxrate", bitrate_str);
+    x264_param_parse( &param, "vbv-bufsize", bitrate_str);
     
     x264_param_parse( &param, "fps", fps_str );
     x264_param_parse( &param, "keyint", fps_str);
@@ -169,6 +164,31 @@ end:
         h = NULL;
     }
     return 0;
+}
+
+- (int) updateBitrate:(int) bitrate {
+    [super updateBitrate:bitrate];
+    char bitrate_str[20];
+    int x264_bitrate = bitrate;
+    int ret;
+    NSLog(@"x264_bitrate = %d", x264_bitrate);
+    if (h == NULL)
+        return -1;
+    
+    if (x264_bitrate <= 0)
+        return -1;
+    
+    int_to_str(x264_bitrate, bitrate_str);
+    
+    x264_param_parse( &param, "bitrate", bitrate_str );
+    x264_param_parse( &param, "vbv-maxrate", bitrate_str);
+    x264_param_parse( &param, "vbv-bufsize", bitrate_str);
+    
+    NSLog(@"reconfig: fps_num = %d, fps_den = %d, bitrate = %d, rc method = %d, vbv_bufsize = %d, vbv_maxrate = %d\n", param.i_fps_num, param.i_fps_den, param.rc.i_bitrate, param.rc.i_rc_method, param.rc.i_vbv_buffer_size, param.rc.i_vbv_max_bitrate);
+    
+    ret = x264_encoder_reconfig(h, &param);
+    NSLog(@"reconfig rv: %d\n:", ret);
+    return ret;
 }
 
 @end

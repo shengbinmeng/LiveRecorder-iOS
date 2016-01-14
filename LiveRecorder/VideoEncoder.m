@@ -32,4 +32,9 @@
     return 0;
 }
 
+- (int) updateBitrate:(int) bitrate {
+    NSLog(@"VideoEncoder updateBitrate");
+    return 0;
+}
+
 @end

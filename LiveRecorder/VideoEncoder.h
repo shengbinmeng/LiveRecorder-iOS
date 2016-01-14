@@ -22,5 +22,6 @@
 - (int) open;
 - (int) encode:(CMSampleBufferRef)sampleBuffer;
 - (int) close;
+- (int) updateBitrate:(int)bitrate;
 
 @end
