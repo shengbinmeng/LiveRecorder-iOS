@@ -24,10 +24,10 @@
 		6C7862F31B997F5F00E3F318 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6C7862F11B997F5F00E3F318 /* LaunchScreen.xib */; };
 		6C7862FF1B997F5F00E3F318 /* LiveRecorderTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C7862FE1B997F5F00E3F318 /* LiveRecorderTests.m */; };
 		6C78630D1B99842E00E3F318 /* CaptureViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C78630C1B99842E00E3F318 /* CaptureViewController.m */; };
-		881D080C1BB11CE20028405F /* LiveStreamOutput.m in Sources */ = {isa = PBXBuildFile; fileRef = 881D080B1BB11CE20028405F /* LiveStreamOutput.m */; settings = {ASSET_TAGS = (); }; };
-		881D081C1BB11CF90028405F /* librtmp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 881D081B1BB11CF90028405F /* librtmp.a */; settings = {ASSET_TAGS = (); }; };
-		F78BE2391BB25F57008FF0E1 /* libx264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F78BE2381BB25F57008FF0E1 /* libx264.a */; settings = {ASSET_TAGS = (); }; };
-		F78BE23C1BB25F68008FF0E1 /* SoftwareVideoEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = F78BE23B1BB25F68008FF0E1 /* SoftwareVideoEncoder.m */; settings = {ASSET_TAGS = (); }; };
+		881D080C1BB11CE20028405F /* LiveStreamOutput.m in Sources */ = {isa = PBXBuildFile; fileRef = 881D080B1BB11CE20028405F /* LiveStreamOutput.m */; };
+		881D081C1BB11CF90028405F /* librtmp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 881D081B1BB11CF90028405F /* librtmp.a */; };
+		F78BE2391BB25F57008FF0E1 /* libx264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F78BE2381BB25F57008FF0E1 /* libx264.a */; };
+		F78BE23C1BB25F68008FF0E1 /* SoftwareVideoEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = F78BE23B1BB25F68008FF0E1 /* SoftwareVideoEncoder.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -127,8 +127,6 @@
 				6C24F2471BAA55C400D4A1BF /* HardwareAudioEncoder.m */,
 				6C04CE021BA8005800547392 /* HardwareVideoEncoder.h */,
 				6C04CE031BA8005800547392 /* HardwareVideoEncoder.m */,
-				881D080A1BB11CE20028405F /* LiveStreamOutput.h */,
-				881D080B1BB11CE20028405F /* LiveStreamOutput.m */,
 				F78BE23A1BB25F68008FF0E1 /* SoftwareVideoEncoder.h */,
 				F78BE23B1BB25F68008FF0E1 /* SoftwareVideoEncoder.m */,
 				6C04CDFB1BA7BB4200547392 /* StreamOutput.h */,
@@ -163,6 +161,8 @@
 		6C7862E11B997F5F00E3F318 /* LiveRecorder */ = {
 			isa = PBXGroup;
 			children = (
+				881D080A1BB11CE20028405F /* LiveStreamOutput.h */,
+				881D080B1BB11CE20028405F /* LiveStreamOutput.m */,
 				6C7862E61B997F5F00E3F318 /* AppDelegate.h */,
 				6C7862E71B997F5F00E3F318 /* AppDelegate.m */,
 				6C7862E91B997F5F00E3F318 /* ViewController.h */,

@@ -10,6 +10,8 @@
 #import <Photos/Photos.h>
 #import "CaptureView.h"
 #import "CoreRecorder.h"
+#import "LiveStreamOutput.h"
+#import "FileStreamOutput.h"
 
 typedef NS_ENUM(NSInteger, CaptureSetupResult) {
     CaptureSetupResultSuccess,
@@ -214,8 +216,17 @@ typedef NS_ENUM(NSInteger, CaptureSetupResult) {
         if (self.outputAddress != nil && ![self.outputAddress isEqualToString:@""]) {
             outputAddress = self.outputAddress;
         }
-        
-        [self.recorder setSampleRate:sampleRate channelCount:channelCount audioBitrate:audioBitrate width:width height:height frameRate:frameRate videoBitrate:videoBitrate outputAddress:outputAddress];
+        StreamOutput *output;
+        if ([self.outputAddress containsString:@":"]) {
+            // Simply think this is live address.
+            output = [[LiveStreamOutput alloc] init];
+        } else {
+            output = [[FileStreamOutput alloc] init];
+        }
+        [output open:self.outputAddress];
+
+        [self.recorder setSampleRate:sampleRate channelCount:channelCount audioBitrate:audioBitrate width:width height:height frameRate:frameRate videoBitrate:videoBitrate];
+        self.recorder.output = output;
         self.recorder.videoEncoderType = videoEncoderType;
         self.recorder.delegate = self;
     });

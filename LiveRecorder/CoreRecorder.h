@@ -31,11 +31,10 @@ typedef NS_ENUM(int, CREncoderType) {
 @property int height;
 @property int frameRate;
 @property int videoBitrate;
-@property NSString *outputAddress;
 @property id delegate;
 @property CREncoderType videoEncoderType;
 
-- (void) setSampleRate:(int)sampleRate channelCount:(int)channelCount audioBitrate:(int)audioBitrate width:(int)width height:(int)height frameRate:(int)frameRate videoBitrate:(int)videoBitrate outputAddress:(NSString*) address;
+- (void) setSampleRate:(int)sampleRate channelCount:(int)channelCount audioBitrate:(int)audioBitrate width:(int)width height:(int)height frameRate:(int)frameRate videoBitrate:(int)videoBitrate;
 - (int) start;
 - (int) didReceiveAudioSamples:(CMSampleBufferRef)sampleBuffer;
 - (int) didReceiveVideoSamples:(CMSampleBufferRef)sampleBuffer;

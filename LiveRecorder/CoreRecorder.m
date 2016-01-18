@@ -11,12 +11,10 @@
 #import "HardwareVideoEncoder.h"
 #import "HardwareAudioEncoder.h"
 #import "SoftwareVideoEncoder.h"
-#import "FileStreamOutput.h"
-#import "LiveStreamOutput.h"
 
 @implementation CoreRecorder
 
-- (void) setSampleRate:(int)sampleRate channelCount:(int)channelCount audioBitrate:(int)audioBitrate width:(int)width height:(int)height frameRate:(int)frameRate videoBitrate:(int)videoBitrate outputAddress:(NSString*) address {
+- (void) setSampleRate:(int)sampleRate channelCount:(int)channelCount audioBitrate:(int)audioBitrate width:(int)width height:(int)height frameRate:(int)frameRate videoBitrate:(int)videoBitrate {
     self.sampleRate = sampleRate;
     self.channelCount = channelCount;
     self.audioBitrate = audioBitrate;
@@ -24,23 +22,14 @@
     self.height = height;
     self.frameRate = frameRate;
     self.videoBitrate = videoBitrate;
-    self.outputAddress = address;
 }
 
 - (int) start {
-    if (self.width == 0 || self.height == 0 || self.outputAddress == nil) {
-        NSLog(@"Must at least set width, height and output address before start recorder");
+    if (self.width == 0 || self.height == 0 || self.output == nil) {
+        NSLog(@"Must at least set width, height and output before start recorder");
         return -1;
     }
     int ret = 0;
-    if ([self.outputAddress containsString:@":"]) {
-        // Simply think this is live address.
-        self.output = [[LiveStreamOutput alloc] init];
-    } else {
-        self.output = [[FileStreamOutput alloc] init];
-    }
-    [self.output open:self.outputAddress];
-    
     self.audioEncoder = [[HardwareAudioEncoder alloc] init];
     self.audioEncoder.output = self.output;
     [self.audioEncoder setSampleRate:self.sampleRate channelCount:self.channelCount bitrate:self.audioBitrate];
